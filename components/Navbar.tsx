@@ -1,16 +1,17 @@
 "use client";
 import Image from "next/image"
 import Link from "next/link"
+import { usePathname } from 'next/navigation'
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useState } from "react"
 
 
 const navigation = [
-    { name: 'الرئيسية', href: '/', current: true },
-    { name: 'الخدمات', href: '/services', current: false },
-    { name: 'كيف نعمل', href: '/how-it-work', current: false },
-    { name: 'نبـذه عنا', href: '/about', current: false },
+    { name: 'الرئيسية', href: '/' },
+    { name: 'الخدمات', href: '/services' },
+    { name: 'كيف نعمل', href: '/how-it-work' },
+    { name: 'نبـذه عنا', href: '/about' },
   ]
 
 function classNames(...classes: (string | false | null | undefined)[]): string {
@@ -18,8 +19,8 @@ function classNames(...classes: (string | false | null | undefined)[]): string {
 }
 
 export const Navbar = () => {
-
-const [isLogged, setIsLogged]=useState(false)
+  const pathname = usePathname();
+  const [isLogged, setIsLogged] = useState(false)
 
 
 
@@ -53,10 +54,12 @@ const [isLogged, setIsLogged]=useState(false)
                 <Link
                   key={item.name}
                   href={item.href}
-                  aria-current={item.current ? 'page' : undefined}
+                  aria-current={pathname === item.href ? 'page' : undefined}
                   className={classNames(
-                    item.current ? 'bg-gray-200 text-gray-900' : 'text-white hover:bg-gray-700 hover:text-white',
-                    'rounded-md px-3 py-2 text-sm  font-semibold',
+                    pathname === item.href
+                      ? 'bg-white text-gray-900'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                    'rounded-md px-3 py-2 text-sm font-bold'
                   )}
                 >
                   {item.name}
@@ -128,50 +131,16 @@ const [isLogged, setIsLogged]=useState(false)
             key={item.name}
             as="a"
             href={item.href}
-            aria-current={item.current ? 'page' : undefined}
+            aria-current={pathname === item.href ? 'page' : undefined}
             className={classNames(
-              item.current ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-              'block rounded-md px-3 py-2 text-base font-medium',
-            )}
-          >
+                      pathname === item.href
+                        ? 'bg-white text-gray-900'
+                        : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                      'block rounded-md px-3 py-2 text-base font-bold'
+                    )}     >
             {item.name}
           </DisclosureButton>
         ))}
       </div>
     </DisclosurePanel>
   </Disclosure>)}
-
-/* <nav className="bg-white shadow-sm fixed top-0   w-full z-10">
-<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-<div className="flex justify-between h-16">
-<div className="flex items-center">
-<div className="flex-shrink-0 flex items-center">
-<span className="text-blue-800 text-xl font-bold">CraftsmenConnect</span>
-</div>
-</div>
-<div className="hidden md:flex items-center justify-center flex-1">
-<div className="flex space-x-8">
-<a href="#" className="text-blue-800 font-medium hover:text-blue-600 px-3 py-2 cursor-pointer">Home</a>
-<a href="#" className="text-gray-700 hover:text-blue-600 px-3 py-2 cursor-pointer">Services</a>
-<a href="#" className="text-gray-700 hover:text-blue-600 px-3 py-2 cursor-pointer">How it Works</a>
-<a href="#" className="text-gray-700 hover:text-blue-600 px-3 py-2 cursor-pointer">About Us</a>
-</div>
-</div>
-<div className="hidden md:flex items-center">
-<Link href={'/login'} className="border-2  p-2 rounded-lg mr-3 cursor-pointer !rounded-button whitespace-nowrap">
-تسجيل الدخول
-</Link>
-<Link href={'/register'} className=" bg-blue-800 hover:bg-blue-700 text-white cursor-pointer !rounded-button whitespace-nowrap">
-سجل
-</Link>
-</div>
-<div className="flex items-center md:hidden">
-<button className="text-gray-700 hover:text-blue-600 cursor-pointer">
-<i className="fas fa-bars text-xl"></i>
-</button>
-</div>
-</div>
-</div>
-</nav>
-  )
-} */
