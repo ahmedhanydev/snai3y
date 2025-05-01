@@ -25,9 +25,40 @@ interface Service {
     { name: "التنظيف", icon: Brush }
   ];
 
-export default function RequestService(){
+export default function RequestService() {
     const [activeTab, setActiveTab] = useState<string>("customer");
     const [activeStep, setActiveStep] = useState<number>(1);
+    const [selectedService, setSelectedService] = useState<{
+        category: string;
+        id: string;
+        name: string;
+        price: string;
+        duration: string;
+    } | null>(null);
+
+    // Get query parameters
+    const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+    
+    // Set selected service from query parameters when component mounts
+    useState(() => {
+        const category = searchParams.get('category');
+        const serviceId = searchParams.get('service');
+        const name = searchParams.get('name');
+        const price = searchParams.get('price');
+        const duration = searchParams.get('duration');
+
+        if (category && serviceId && name && price && duration) {
+            setSelectedService({
+                category,
+                id: serviceId,
+                name,
+                price,
+                duration
+            });
+            // Move to the next step since service is already selected
+            setActiveStep(2);
+        }
+    });
 
     const technicians = [
         {

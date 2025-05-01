@@ -8,9 +8,9 @@ import { useState } from "react"
 
 const navigation = [
     { name: 'الرئيسية', href: '/', current: true },
-    { name: 'الخدمات', href: '#', current: false },
-    { name: 'كيف نعمل', href: '#', current: false },
-    { name: 'نبـذه عنا', href: '#', current: false },
+    { name: 'الخدمات', href: '/services', current: false },
+    { name: 'كيف نعمل', href: '/how-it-work', current: false },
+    { name: 'نبـذه عنا', href: '/about', current: false },
   ]
 
 function classNames(...classes: (string | false | null | undefined)[]): string {
