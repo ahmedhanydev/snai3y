@@ -5,9 +5,12 @@ import { Card } from "@/components/ui/card";
 import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { Button } from '@/components/ui/button';
+import Autoplay from 'embla-carousel-autoplay'
 
 export const Testimonials: React.FC = () => {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, direction: 'rtl' });
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true, 
+  },[ Autoplay()]);
   const [prevBtnDisabled, setPrevBtnDisabled] = useState(true);
   const [nextBtnDisabled, setNextBtnDisabled] = useState(true);
 
@@ -29,6 +32,7 @@ export const Testimonials: React.FC = () => {
 
   const testimonials = [
     {
+      id: 1,
       name: "أحمد محمد",
       role: "عميل",
       service: "كهرباء",
@@ -36,6 +40,7 @@ export const Testimonials: React.FC = () => {
       rating: 5
     },
     {
+      id: 2,
       name: "سارة أحمد",
       role: "عميلة",
       service: "تنظيف",
@@ -43,6 +48,7 @@ export const Testimonials: React.FC = () => {
       rating: 5
     },
     {
+      id:3,
       name: "محمد علي",
       role: "عميل",
       service: "سباكة",
@@ -50,13 +56,15 @@ export const Testimonials: React.FC = () => {
       rating: 4
     },
     {
+      id: 4,
       name: "نورا حسين",
       role: "عميلة",
       service: "دهان",
       comment: "النتيجة فاقت توقعاتي. الفني كان محترف ودقيق في عمله.",
-      rating: 5
+      rating: 2
     },
     {
+      id:5,
       name: "يوسف محمود",
       role: "عميل",
       service: "نجارة",
@@ -64,11 +72,12 @@ export const Testimonials: React.FC = () => {
       rating: 5
     },
     {
+      id:6,
       name: "ليلى كريم",
       role: "عميلة",
       service: "صيانة",
       comment: "خدمة ممتازة وفريق عمل محترف. سأعود للتعامل معهم مرة أخرى.",
-      rating: 5
+      rating: 3
     }
   ];
 
@@ -77,23 +86,23 @@ export const Testimonials: React.FC = () => {
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">ماذا يقول عملاؤنا</h2>
         
-        <div className="relative max-w-5xl mx-auto">
+        <div className="relative max-w-7xl mx-auto">
           {/* Carousel Container */}
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex">
               {testimonials.map((testimonial, index) => (
-                <div key={index} className="flex-[0_0_100%] min-w-0 md:flex-[0_0_50%] lg:flex-[0_0_33.333%] pl-4">
-                  <Card className="p-6 hover:shadow-lg transition-shadow h-full bg-white">
+                <div key={index} className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_50%] md:flex-[0_0_33.333%] lg:flex-[0_0_25%] pl-4">
+                  <Card className="p-4 flex flex-col justify-center items-end w-full hover:shadow-lg transition-shadow h-full bg-white mx-2">
                     <div className="flex gap-1 mb-4">
                       {[...Array(testimonial.rating)].map((_, i) => (
                         <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                       ))}
                     </div>
-                    <p className="text-gray-600 mb-4 text-lg">"الخدمة: {testimonial.service}"</p>
-                    <p className="text-gray-600 mb-6 italic">{testimonial.comment}</p>
-                    <div className="border-t pt-4">
-                      <h4 className="font-semibold text-lg">{testimonial.name}</h4>
-                      <p className="text-gray-500">{testimonial.role}</p>
+                    <p className="text-gray-600 mb-2 text-base">"الخدمة: {testimonial.service}"</p>
+                    <p className="text-gray-600 mb-4 text-end text-sm">{testimonial.comment}</p>
+                    <div className="border-t pt-3 w-full flex flex-col items-end">
+                      <h4 className="font-semibold text-base">{testimonial.name}</h4>
+                      <p className="text-gray-500 text-sm">{testimonial.role}</p>
                     </div>
                   </Card>
                 </div>
@@ -103,6 +112,15 @@ export const Testimonials: React.FC = () => {
 
           {/* Navigation Buttons */}
           <div className="flex justify-center gap-4 mt-8">
+          <Button
+              variant="outline"
+              size="icon"
+              onClick={scrollNext}
+              disabled={nextBtnDisabled}
+              className="rounded-full"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
             <Button
               variant="outline"
               size="icon"
@@ -112,15 +130,7 @@ export const Testimonials: React.FC = () => {
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={scrollNext}
-              disabled={nextBtnDisabled}
-              className="rounded-full"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
+          
           </div>
         </div>
       </div>
