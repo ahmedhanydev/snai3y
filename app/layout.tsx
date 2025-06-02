@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Cairo } from 'next/font/google';
 import TanStackProvider from "@/providers/TanStackProvider";
+import { Toaster } from 'sonner';
 
 
 const geistSans = Geist({
@@ -46,6 +47,8 @@ export default function RootLayout({
 
         <TanStackProvider>
       {children}
+              <Toaster position="top-right" richColors closeButton />
+
     </TanStackProvider>
         
         <Footer/>
