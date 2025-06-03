@@ -1,9 +1,9 @@
-
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+
+import { Button } from "@/components/ui/button";
 
 export default function Success() {
   const searchParams = useSearchParams();
@@ -31,38 +31,72 @@ export default function Success() {
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
               <CheckCircle className="w-12 h-12 text-green-600" />
             </div>
-            <h3 className="text-3xl font-medium text-green-600">تم إرسال طلبك بنجاح</h3>
-            <div className="text-xl font-medium text-blue-600">رقم الطلب: {requestData.reference}</div>
-            <p className="text-gray-600 text-lg">تم إرسال طلبك إلى {requestData.craftsman}</p>
-            
+            <h3 className="text-3xl font-medium text-green-600">
+              تم إرسال طلبك بنجاح
+            </h3>
+            <div className="text-xl font-medium text-blue-600">
+              رقم الطلب: {requestData.reference}
+            </div>
+            <p className="text-gray-600 text-lg">
+              تم إرسال طلبك إلى {requestData.craftsman}
+            </p>
+
             <div className="bg-gray-50 p-8 rounded-lg w-full mt-4">
-              <h4 className="text-xl font-medium mb-6 text-right">تفاصيل الطلب:</h4>
+              <h4 className="text-xl font-medium mb-6 text-right">
+                تفاصيل الطلب:
+              </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-right">
                 <div className="space-y-3">
-                  <p><span className="font-medium ml-2">الخدمة:</span> {requestData.service}</p>
-                  <p><span className="font-medium ml-2">الفني:</span> {requestData.craftsman}</p>
-                  <p><span className="font-medium ml-2">العنوان:</span> {requestData.address}, {requestData.city}</p>
+                  <p>
+                    <span className="font-medium ml-2">الخدمة:</span>{" "}
+                    {requestData.service}
+                  </p>
+                  <p>
+                    <span className="font-medium ml-2">الفني:</span>{" "}
+                    {requestData.craftsman}
+                  </p>
+                  <p>
+                    <span className="font-medium ml-2">العنوان:</span>{" "}
+                    {requestData.address}, {requestData.city}
+                  </p>
                 </div>
                 <div className="space-y-3">
-                  <p><span className="font-medium ml-2">المشكلة:</span> {requestData.title}</p>
-                  <p><span className="font-medium ml-2">مستوى الإلحاح:</span> {{
-                    low: "منخفض - خلال أسبوع",
-                    medium: "متوسط - خلال يومين",
-                    high: "عالي - اليوم",
-                    urgent: "عاجل - في أقرب وقت"
-                  }[requestData.urgency || "medium"]}</p>
-                  <p><span className="font-medium ml-2">الوقت المتوقع للوصول:</span> {{
-                    low: "خلال 2-7 أيام",
-                    medium: "خلال 24-48 ساعة",
-                    high: "خلال 12 ساعة",
-                    urgent: "خلال 1-3 ساعات"
-                  }[requestData.urgency || "medium"]}</p>
+                  <p>
+                    <span className="font-medium ml-2">المشكلة:</span>{" "}
+                    {requestData.title}
+                  </p>
+                  <p>
+                    <span className="font-medium ml-2">مستوى الإلحاح:</span>{" "}
+                    {
+                      {
+                        low: "منخفض - خلال أسبوع",
+                        medium: "متوسط - خلال يومين",
+                        high: "عالي - اليوم",
+                        urgent: "عاجل - في أقرب وقت",
+                      }[requestData.urgency || "medium"]
+                    }
+                  </p>
+                  <p>
+                    <span className="font-medium ml-2">
+                      الوقت المتوقع للوصول:
+                    </span>{" "}
+                    {
+                      {
+                        low: "خلال 2-7 أيام",
+                        medium: "خلال 24-48 ساعة",
+                        high: "خلال 12 ساعة",
+                        urgent: "خلال 1-3 ساعات",
+                      }[requestData.urgency || "medium"]
+                    }
+                  </p>
                 </div>
               </div>
             </div>
 
             <div className="mt-8 space-y-4 w-full max-w-md mx-auto">
-              <p className="text-gray-600">سيتم إرسال تأكيد إلى بريدك الإلكتروني مع تفاصيل الطلب</p>
+              <p className="text-gray-600">
+                سيتم إرسال تأكيد إلى بريدك الإلكتروني مع تفاصيل الطلب
+              </p>
               <Button
                 className="bg-blue-600 hover:bg-blue-700 text-white rounded-md whitespace-nowrap cursor-pointer w-full py-6 text-lg"
                 onClick={handleNewRequest}

@@ -1,20 +1,31 @@
 "use client";
-import Image from "next/image"
-import Link from "next/link"
-import { usePathname, useRouter } from 'next/navigation'
-import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
-import { Bars3Icon, BellIcon, XMarkIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline'
-import { useState, useEffect } from "react"
+import {
+  Disclosure,
+  DisclosureButton,
+  DisclosurePanel,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+} from "@headlessui/react";
+import {
+  Bars3Icon,
+  EllipsisHorizontalIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const navigation = [
-    { name: 'الرئيسية', href: '/' },
-    { name: 'الخدمات', href: '/services' },
-    { name: 'كيف نعمل', href: '/how-it-work' },
-    { name: 'نبـذه عنا', href: '/about' },
-  ]
+  { name: "الرئيسية", href: "/" },
+  { name: "الخدمات", href: "/services" },
+  { name: "كيف نعمل", href: "/how-it-work" },
+  { name: "نبـذه عنا", href: "/about" },
+];
 
 function classNames(...classes: (string | false | null | undefined)[]): string {
-    return classes.filter(Boolean).join(' ')
+  return classes.filter(Boolean).join(" ");
 }
 
 export const Navbar = () => {
@@ -22,18 +33,20 @@ export const Navbar = () => {
   const router = useRouter();
   const [isLogged, setIsLogged] = useState(false);
   const [userName, setUserName] = useState("");
+  // Either use userImage in your component or remove it
   const [userImage, setUserImage] = useState("");
-  
-  // Default profile image if none is available
-  const defaultProfileImage = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80";
+
+  // Either use defaultProfileImage in your component or remove it
+  const defaultProfileImage =
+    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80";
 
   // Check if user is logged in when component mounts or pathname changes
   useEffect(() => {
     const checkLoginStatus = () => {
-      const token = localStorage.getItem('token');
-      const storedUserName = localStorage.getItem('userName');
-      const storedUserImage = localStorage.getItem('imageBase64');
-      
+      const token = localStorage.getItem("token");
+      const storedUserName = localStorage.getItem("userName");
+      const storedUserImage = localStorage.getItem("imageBase64");
+
       if (token) {
         setIsLogged(true);
         if (storedUserName) {
@@ -48,36 +61,36 @@ export const Navbar = () => {
         setUserImage("");
       }
     };
-    
+
     checkLoginStatus();
-    
+
     // Add event listener for storage changes
-    window.addEventListener('storage', checkLoginStatus);
-    
+    window.addEventListener("storage", checkLoginStatus);
+
     return () => {
-      window.removeEventListener('storage', checkLoginStatus);
+      window.removeEventListener("storage", checkLoginStatus);
     };
   }, [pathname]); // Re-run when pathname changes
 
   const handleLogout = () => {
     // Clear all user data from localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('userType');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('expiryDate');
-    localStorage.removeItem('imageBase64');
-    
+    localStorage.removeItem("token");
+    localStorage.removeItem("userType");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("expiryDate");
+    localStorage.removeItem("imageBase64");
+
     // Trigger a storage event to update other components
-    window.dispatchEvent(new Event('storage'));
-    
+    window.dispatchEvent(new Event("storage"));
+
     // Update state
     setIsLogged(false);
     setUserName("");
     setUserImage("");
-    
+
     // Redirect to home page
-    router.push('/');
+    router.push("/");
   };
 
   return (
@@ -89,13 +102,24 @@ export const Navbar = () => {
             <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:ring-2 focus:ring-white focus:outline-hidden focus:ring-inset">
               <span className="absolute -inset-0.5" />
               <span className="sr-only">Open main menu</span>
-              <Bars3Icon aria-hidden="true" className="block size-6 group-data-open:hidden" />
-              <XMarkIcon aria-hidden="true" className="hidden size-6 group-data-open:block" />
+              <Bars3Icon
+                aria-hidden="true"
+                className="block size-6 group-data-open:hidden"
+              />
+              <XMarkIcon
+                aria-hidden="true"
+                className="hidden size-6 group-data-open:block"
+              />
             </DisclosureButton>
           </div>
           <div className="flex flex-1 items-center justify-center sm:justify-between">
             <div className="flex shrink-0 items-center">
-              <Link href={'/'} className="text-white text-2xl pe-40 md:text-3xl font-bold logo">Snai3y</Link>
+              <Link
+                href={"/"}
+                className="text-white text-2xl pe-40 md:text-3xl font-bold logo"
+              >
+                Snai3y
+              </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex w-full">
               <div className="flex space-x-4 justify-center w-full">
@@ -103,12 +127,12 @@ export const Navbar = () => {
                   <Link
                     key={item.name}
                     href={item.href}
-                    aria-current={pathname === item.href ? 'page' : undefined}
+                    aria-current={pathname === item.href ? "page" : undefined}
                     className={classNames(
                       pathname === item.href
-                        ? 'bg-white text-gray-900'
-                        : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                      'rounded-md px-3 py-2 text-sm font-bold'
+                        ? "bg-white text-gray-900"
+                        : "text-gray-300 hover:bg-gray-700 hover:text-white",
+                      "rounded-md px-3 py-2 text-sm font-bold",
                     )}
                   >
                     {item.name}
@@ -124,7 +148,10 @@ export const Navbar = () => {
                 <div>
                   <MenuButton className="relative flex items-center px-3 py-2 rounded-md bg-gray-800 text-sm border border-white hover:bg-gray-700 focus:outline-hidden focus:ring-1 focus:ring-white">
                     <span className="text-white mr-2">{userName}</span>
-                    <EllipsisHorizontalIcon className="h-5 w-5 text-white" aria-hidden="true" />
+                    <EllipsisHorizontalIcon
+                      className="h-5 w-5 text-white"
+                      aria-hidden="true"
+                    />
                   </MenuButton>
                 </div>
                 <MenuItems
@@ -151,8 +178,18 @@ export const Navbar = () => {
               </Menu>
             ) : (
               <div className="flex gap-2">
-                <Link href={'/login'} className="border-2 text-white text-sm md:text-base rounded-lg px-2 md:px-3 py-2">تسجيل الدخول</Link>
-                <Link href={'/register'} className="bg-white text-gray-900 text-sm md:text-base rounded-lg px-4 md:px-6 py-2">سجل</Link>
+                <Link
+                  href={"/login"}
+                  className="border-2 text-white text-sm md:text-base rounded-lg px-2 md:px-3 py-2"
+                >
+                  تسجيل الدخول
+                </Link>
+                <Link
+                  href={"/register"}
+                  className="bg-white text-gray-900 text-sm md:text-base rounded-lg px-4 md:px-6 py-2"
+                >
+                  سجل
+                </Link>
               </div>
             )}
           </div>
@@ -166,12 +203,12 @@ export const Navbar = () => {
               key={item.name}
               as="a"
               href={item.href}
-              aria-current={pathname === item.href ? 'page' : undefined}
+              aria-current={pathname === item.href ? "page" : undefined}
               className={classNames(
                 pathname === item.href
-                  ? 'bg-white text-gray-900'
-                  : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                'block rounded-md px-3 py-2 text-base font-bold'
+                  ? "bg-white text-gray-900"
+                  : "text-gray-300 hover:bg-gray-700 hover:text-white",
+                "block rounded-md px-3 py-2 text-base font-bold",
               )}
             >
               {item.name}

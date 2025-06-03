@@ -12,4 +12,3 @@ export interface UserCustomer {
   street: string;
   postalCode?: string | null;
 }
-

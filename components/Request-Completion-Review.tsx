@@ -1,14 +1,13 @@
 // The exported code uses Tailwind CSS. Install Tailwind CSS in your dev environment to ensure all styles work.
-"use client"
+"use client";
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card } from "@/components/ui/card";
+
 import { Avatar } from "@/components/ui/avatar";
 import { AvatarImage } from "@/components/ui/avatar";
 import { AvatarFallback } from "@/components/ui/avatar";
-import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 
 const Test: React.FC = () => {
   const [rating, setRating] = useState<number>(0);
@@ -21,7 +20,9 @@ const Test: React.FC = () => {
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newPhotos = Array.from(e.target.files).map((file) => URL.createObjectURL(file));
+      const newPhotos = Array.from(e.target.files).map((file) =>
+        URL.createObjectURL(file),
+      );
       setUploadedPhotos([...uploadedPhotos, ...newPhotos]);
     }
   };
@@ -46,7 +47,10 @@ const Test: React.FC = () => {
     // Redirect or show success message
   };
 
-  const renderStars = (currentRating: number, setRatingFunction: (rating: number) => void) => {
+  const renderStars = (
+    currentRating: number,
+    setRatingFunction: (rating: number) => void,
+  ) => {
     return (
       <div className="flex space-x-1">
         {[1, 2, 3, 4, 5].map((star) => (
@@ -58,7 +62,9 @@ const Test: React.FC = () => {
           >
             <i
               className={`${
-                star <= currentRating ? "fas fa-star text-yellow-400" : "far fa-star text-gray-300"
+                star <= currentRating
+                  ? "fas fa-star text-yellow-400"
+                  : "far fa-star text-gray-300"
               } text-xl`}
             ></i>
           </button>
@@ -146,13 +152,17 @@ const Test: React.FC = () => {
           </div>
 
           <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3">Rate Specific Aspects</h3>
+            <h3 className="text-lg font-semibold mb-3">
+              Rate Specific Aspects
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-3 bg-gray-50 rounded-lg">
                 <div className="flex justify-between mb-2">
                   <span className="font-medium">Professionalism</span>
                   <span className="text-sm text-gray-500">
-                    {professionalismRating > 0 ? `${professionalismRating}/5` : "Not rated"}
+                    {professionalismRating > 0
+                      ? `${professionalismRating}/5`
+                      : "Not rated"}
                   </span>
                 </div>
                 {renderStars(professionalismRating, setProfessionalismRating)}
@@ -161,7 +171,9 @@ const Test: React.FC = () => {
                 <div className="flex justify-between mb-2">
                   <span className="font-medium">Punctuality</span>
                   <span className="text-sm text-gray-500">
-                    {punctualityRating > 0 ? `${punctualityRating}/5` : "Not rated"}
+                    {punctualityRating > 0
+                      ? `${punctualityRating}/5`
+                      : "Not rated"}
                   </span>
                 </div>
                 {renderStars(punctualityRating, setPunctualityRating)}
@@ -188,13 +200,18 @@ const Test: React.FC = () => {
           </div>
 
           <div className="mb-8">
-            <h3 className="text-lg font-semibold mb-3">Add Photos (Optional)</h3>
+            <h3 className="text-lg font-semibold mb-3">
+              Add Photos (Optional)
+            </h3>
             <p className="text-sm text-gray-600 mb-3">
               Share photos of the completed work to help others
             </p>
             <div className="flex flex-wrap gap-3 mb-4">
               {uploadedPhotos.map((photo, index) => (
-                <div key={index} className="relative w-24 h-24 rounded-lg overflow-hidden">
+                <div
+                  key={index}
+                  className="relative w-24 h-24 rounded-lg overflow-hidden"
+                >
                   <img
                     src={photo}
                     alt={`Uploaded photo ${index + 1}`}
@@ -294,7 +311,8 @@ const Test: React.FC = () => {
                 <div>
                   <h3 className="font-medium">Help Others Choose</h3>
                   <p className="text-sm text-gray-600">
-                    Your honest feedback helps other customers make informed decisions.
+                    Your honest feedback helps other customers make informed
+                    decisions.
                   </p>
                 </div>
               </div>
@@ -316,7 +334,8 @@ const Test: React.FC = () => {
                 <div>
                   <h3 className="font-medium">Improve Our Services</h3>
                   <p className="text-sm text-gray-600">
-                    Your feedback helps us continuously improve our service quality.
+                    Your feedback helps us continuously improve our service
+                    quality.
                   </p>
                 </div>
               </div>
@@ -329,4 +348,3 @@ const Test: React.FC = () => {
 };
 
 export default Test;
-

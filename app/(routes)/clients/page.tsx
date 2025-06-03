@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Star, MapPin, Phone, Mail, Search } from 'lucide-react';
+import { Mail, MapPin, Phone, Search, Star } from "lucide-react";
+import { useState } from "react";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 interface Client {
   id: number;
@@ -17,60 +18,64 @@ interface Client {
   totalOrders: number;
   rating: number;
   lastOrder: string;
-  status: 'active' | 'inactive';
+  status: "active" | "inactive";
 }
 
 export default function Clients() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
 
   // Mock data - replace with real data from your backend
   const clients: Client[] = [
     {
       id: 1,
-      name: 'أحمد محمد',
-      email: 'ahmed@example.com',
-      phone: '01234567890',
-      location: 'المعادي، القاهرة',
+      name: "أحمد محمد",
+      email: "ahmed@example.com",
+      phone: "01234567890",
+      location: "المعادي، القاهرة",
       totalOrders: 15,
       rating: 4.8,
-      lastOrder: '2025-05-01',
-      status: 'active'
+      lastOrder: "2025-05-01",
+      status: "active",
     },
     {
       id: 2,
-      name: 'سارة أحمد',
-      email: 'sara@example.com',
-      phone: '01234567891',
-      location: 'مدينة نصر، القاهرة',
+      name: "سارة أحمد",
+      email: "sara@example.com",
+      phone: "01234567891",
+      location: "مدينة نصر، القاهرة",
       totalOrders: 8,
       rating: 4.5,
-      lastOrder: '2025-04-28',
-      status: 'active'
+      lastOrder: "2025-04-28",
+      status: "active",
     },
     {
       id: 3,
-      name: 'محمد علي',
-      email: 'mohamed@example.com',
-      phone: '01234567892',
-      location: 'الدقي، الجيزة',
+      name: "محمد علي",
+      email: "mohamed@example.com",
+      phone: "01234567892",
+      location: "الدقي، الجيزة",
       totalOrders: 3,
       rating: 4.2,
-      lastOrder: '2025-04-15',
-      status: 'inactive'
+      lastOrder: "2025-04-15",
+      status: "inactive",
     },
   ];
 
-  const filteredClients = clients.filter(client => {
-    const matchesSearch = client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         client.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         client.phone.includes(searchQuery);
-    const matchesFilter = filter === 'all' || client.status === filter;
+  const filteredClients = clients.filter((client) => {
+    const matchesSearch =
+      client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.phone.includes(searchQuery);
+    const matchesFilter = filter === "all" || client.status === filter;
     return matchesSearch && matchesFilter;
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8" dir="rtl">
+    <div
+      className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8"
+      dir="rtl"
+    >
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">العملاء</h1>
@@ -90,20 +95,20 @@ export default function Clients() {
           </div>
           <div className="flex gap-2">
             <Button
-              variant={filter === 'all' ? 'default' : 'outline'}
-              onClick={() => setFilter('all')}
+              variant={filter === "all" ? "default" : "outline"}
+              onClick={() => setFilter("all")}
             >
               الكل
             </Button>
             <Button
-              variant={filter === 'active' ? 'default' : 'outline'}
-              onClick={() => setFilter('active')}
+              variant={filter === "active" ? "default" : "outline"}
+              onClick={() => setFilter("active")}
             >
               نشط
             </Button>
             <Button
-              variant={filter === 'inactive' ? 'default' : 'outline'}
-              onClick={() => setFilter('inactive')}
+              variant={filter === "inactive" ? "default" : "outline"}
+              onClick={() => setFilter("inactive")}
             >
               غير نشط
             </Button>
@@ -113,7 +118,10 @@ export default function Clients() {
         {/* Clients Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredClients.map((client) => (
-            <Card key={client.id} className="p-6 hover:shadow-lg transition-all duration-300">
+            <Card
+              key={client.id}
+              className="p-6 hover:shadow-lg transition-all duration-300"
+            >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <Avatar className="w-12 h-12">
@@ -129,9 +137,9 @@ export default function Clients() {
                   </div>
                 </div>
                 <Badge
-                  variant={client.status === 'active' ? 'default' : 'secondary'}
+                  variant={client.status === "active" ? "default" : "secondary"}
                 >
-                  {client.status === 'active' ? 'نشط' : 'غير نشط'}
+                  {client.status === "active" ? "نشط" : "غير نشط"}
                 </Badge>
               </div>
 
