@@ -1,10 +1,6 @@
 import * as yup from 'yup';
 import { InferType } from 'yup';
 
-export const loginSchema = yup.object({
-email: yup.string().email('تنسيق البريد الإلكتروني غير صالح').required('البريد الالكتروني مطلوب'),
-    password: yup.string().min(6, "كلمة المرور يجب ان لا تقل عن 6 حروف").matches(/[A-Z]/, "يجب أن يحتوي على حرف كبير").required("كلمة المرور مطلوبة"),
-})
 
 
 
@@ -38,6 +34,14 @@ export const technicianSchema = yup.object({
   street: yup.string().required("الشارع مطلوب"),
   postalCode: yup.string().required("الرمز البريدي مطلوب"),
 });
+
+export const loginSchema = yup.object({
+  username: yup.string().required("اسم المستخدم مطلوب"),
+  password: yup.string().required("كلمة المرور مطلوبة"),
+});
+
+
+export type LoginCredentials = InferType<typeof loginSchema>;
 
 export type UserCustomer = InferType<typeof registerSchema>;
 
