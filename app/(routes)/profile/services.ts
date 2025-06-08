@@ -48,5 +48,45 @@ export const rejectOrder = async (orderId: number) => {
   return response.data;
 };
 
+// Get orders for a technician with specific status
+export const getTechnicianOrdersByStatus = async (techId: string, status: number, pageNumber = 1, pageSize = 10) => {
+  const response = await axiosInstance.get(`/RequestService/GetByUserTechIdAndStatus/${techId}/${status}/${pageNumber}/${pageSize}`);
+  return response.data;
+};
+
+// Get orders for a customer with specific status
+export const getCustomerOrdersByStatus = async (customerId: string, status: number, pageNumber = 1, pageSize = 10) => {
+  const response = await axiosInstance.get(`/RequestService/GetByUserCustomerIdAndStatus/${customerId}/${status}/${pageNumber}/${pageSize}`);
+  return response.data;
+};
+
+// Delete an order
+export const deleteOrder = async (orderId: number) => {
+  const response = await axiosInstance.delete(`RequestService/${orderId}`);
+  return response.data;
+};
+
+// Update order status
+export const updateOrderStatus = async (orderId: number) => {
+  const response = await axiosInstance.put(`RequestService/UpdateStatusActive/${orderId}`);
+  return response.data;
+};
 
 
+
+// Add this service function to your services.ts file
+export const completeOrder = async (completeData: {
+  id: number;
+  totalPayment: number;
+  rate: number;
+  description: string;
+}) => {
+  const response = await axiosInstance.put(`/RequestService/UpdateStatusCompleted`, completeData);
+  return response.data;
+};
+
+// Add this service function to your services.ts file
+export const getReviewsForTechnician = async (userTechId: string) => {
+  const response = await axiosInstance.get(`/ReviewTech/GetReviewsTechByUserTechId/${userTechId}`);
+  return response.data;
+};
