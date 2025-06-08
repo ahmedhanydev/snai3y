@@ -1,22 +1,13 @@
 "use client";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Bolt,
-  Brush,
-  Droplet,
-  Hammer,
-  Leaf,
-  Paintbrush,
-  Star,
-  UserCircle,
-} from "lucide-react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useForm, type SubmitHandler } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -24,609 +15,522 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-
-interface Service {
-  icon: React.ElementType;
-  name: string;
-}
-
-interface Craftsman {
-  id: number;
-  name: string;
-  rating: number;
-  completedJobs: number;
-  hourlyRate: number;
-  available: boolean;
-  specialization: string;
-}
+import { requestService } from "./services";
+import { Calendar } from "@/components/ui/calendar";
+import { Loader2, MapPin, Clock, FileText, User } from "lucide-react";
+import { requestSchema, type RequestFormData } from "./validations";
+import { toast } from "sonner";
 
 interface RequestStep {
   id: number;
   name: string;
+  icon: React.ReactNode;
 }
 
-const popularServices: Service[] = [
-  { name: "الكهرباء", icon: Bolt },
-  { name: "السباكة", icon: Droplet },
-  { name: "النجارة", icon: Hammer },
-  { name: "الدهان", icon: Paintbrush },
-  { name: "البستنة", icon: Leaf },
-  { name: "التنظيف", icon: Brush },
-];
-
-const dummyCraftsmen: Craftsman[] = [
-  {
-    id: 1,
-    name: "أحمد محمد",
-    rating: 4.8,
-    completedJobs: 156,
-    hourlyRate: 50,
-    available: true,
-    specialization: "كهربائي",
-  },
-  {
-    id: 2,
-    name: "محمد علي",
-    rating: 4.5,
-    completedJobs: 98,
-    hourlyRate: 45,
-    available: true,
-    specialization: "سباك",
-  },
-  {
-    id: 3,
-    name: "عمر حسن",
-    rating: 4.9,
-    completedJobs: 203,
-    hourlyRate: 60,
-    available: true,
-    specialization: "نجار",
-  },
-  {
-    id: 4,
-    name: "خالد إبراهيم",
-    rating: 4.7,
-    completedJobs: 178,
-    hourlyRate: 55,
-    available: true,
-    specialization: "دهان",
-  },
-  {
-    id: 5,
-    name: "يوسف أحمد",
-    rating: 4.6,
-    completedJobs: 132,
-    hourlyRate: 65,
-    available: true,
-    specialization: "كهربائي",
-  },
-  {
-    id: 6,
-    name: "مصطفى سعيد",
-    rating: 4.9,
-    completedJobs: 245,
-    hourlyRate: 70,
-    available: true,
-    specialization: "سباك",
-  },
-  {
-    id: 7,
-    name: "عبدالله محمود",
-    rating: 4.4,
-    completedJobs: 87,
-    hourlyRate: 40,
-    available: true,
-    specialization: "نجار",
-  },
-  {
-    id: 8,
-    name: "حسن علي",
-    rating: 4.7,
-    completedJobs: 167,
-    hourlyRate: 58,
-    available: true,
-    specialization: "دهان",
-  },
-  {
-    id: 9,
-    name: "كريم سامح",
-    rating: 4.8,
-    completedJobs: 192,
-    hourlyRate: 63,
-    available: true,
-    specialization: "بستنة",
-  },
-  {
-    id: 10,
-    name: "طارق جمال",
-    rating: 4.6,
-    completedJobs: 143,
-    hourlyRate: 52,
-    available: true,
-    specialization: "تنظيف",
-  },
-];
-
 const requestSteps: RequestStep[] = [
-  { id: 1, name: "اختر خدمة" },
-  { id: 2, name: "تفاصيل الموقع" },
-  { id: 3, name: "وصف المشكلة" },
-  { id: 4, name: "اختر الفني" },
+  { id: 1, name: "اختر خدمة", icon: <FileText className="w-5 h-5" /> },
+  { id: 2, name: "تفاصيل الموقع", icon: <MapPin className="w-5 h-5" /> },
+  { id: 3, name: "وصف المشكلة", icon: <Clock className="w-5 h-5" /> },
+  { id: 4, name: "اختر الفني", icon: <User className="w-5 h-5" /> },
 ];
 
 export default function RequestService() {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState<number>(1);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [selectedService, setSelectedService] = useState<{
-    category: string;
-    id: string;
-    name: string;
-    price: string;
-    duration: string;
-  } | null>(null);
-  const [availableCraftsmen, setAvailableCraftsmen] =
-    useState<Craftsman[]>(dummyCraftsmen);
-  const [selectedCraftsman, setSelectedCraftsman] = useState<Craftsman | null>(
-    null,
-  );
-  const [problemDetails, setProblemDetails] = useState({
-    title: "",
-    description: "",
-    address: {
-      line1: "",
-      line2: "",
-      city: "",
-      zipCode: "",
+  const [error, setError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+    trigger,
+  } = useForm<RequestFormData>({
+    resolver: yupResolver(requestSchema),
+    mode: "onSubmit",
+    defaultValues: {
+      attachmentBase64: "",
     },
-    urgency: "medium",
   });
 
-  useEffect(() => {
-    const searchParams = new URLSearchParams(
-      typeof window !== "undefined" ? window.location.search : "",
-    );
-    const category = searchParams.get("category");
-    const serviceId = searchParams.get("service");
-    const name = searchParams.get("name");
-    const price = searchParams.get("price");
-    const duration = searchParams.get("duration");
+  // React Query hooks
+  const { data: services = [], isLoading: isLoadingServices } = useQuery({
+    queryKey: ["services"],
+    queryFn: requestService.getAllServices,
+  });
 
-    if (category && serviceId && name && price && duration) {
-      setSelectedService({
-        category,
-        id: serviceId,
-        name,
-        price,
-        duration,
-      });
-      setActiveStep(2);
+  const { data: governorates = [], isLoading: isLoadingGovernorates } = useQuery({
+    queryKey: ["governorates"],
+    queryFn: requestService.getAllGovernorates,
+  });
+
+  const { data: allCities = [], isLoading: isLoadingCities } = useQuery({
+    queryKey: ["cities"],
+    queryFn: requestService.getAllCities,
+  });
+
+  const selectedGovernorate = watch("governorate");
+  const selectedCity = watch("city");
+  const selectedService = watch("service");
+
+  const { data: technicians = [], isLoading: isLoadingTechnicians } = useQuery({
+    queryKey: ["technicians", selectedCity?.id, selectedService?.id],
+    queryFn: () => {
+      if (!selectedCity?.id || !selectedService?.id) return Promise.resolve([]);
+      return requestService.getTechniciansByCityAndService(
+        selectedCity.id,
+        selectedService.id,
+      );
+    },
+    enabled: !!selectedCity?.id && !!selectedService?.id,
+  });
+
+  const createRequestMutation = useMutation({
+    mutationFn: requestService.createRequest,
+    onSuccess: (response) => {
+      if (response.success) {
+        const formData = watch();
+        const searchParams = new URLSearchParams({
+          service: formData.service.name,
+          technician: formData.technician.fullName,
+          location: formData.location,
+          city: formData.city.name,
+          description: formData.description,
+          date: formData.date.toISOString(),
+        });
+        
+        console.log("Date being passed to success page:", formData.date, formData.date.toISOString());
+        
+        router.push(`/request/success?${searchParams.toString()}`);
+      } else {
+        toast.error(response.message || "حدث خطأ أثناء إرسال الطلب");
+      }
+    },
+    onError: (error) => {
+      console.error("Error creating request:", error);
+      toast.error(error instanceof Error ? error.message : "حدث خطأ أثناء إرسال الطلب");
+    },
+  });
+
+  const handleNextStep = async () => {
+    try {
+      let fieldsToValidate: (keyof RequestFormData)[] = [];
+      
+      // Only validate fields for the current step
+      switch (activeStep) {
+        case 1:
+          fieldsToValidate = ['service'];
+          break;
+        case 2:
+          fieldsToValidate = ['governorate', 'city', 'location'];
+          break;
+        case 3:
+          fieldsToValidate = ['description', 'date'];
+          break;
+        case 4:
+          fieldsToValidate = ['technician'];
+          break;
+      }
+
+      const isValid = await trigger(fieldsToValidate);
+      console.log("Form validation result:", isValid);
+      console.log("Current form errors:", errors);
+      
+      if (isValid) {
+        setError(null);
+        setActiveStep((prev) => prev + 1);
+      } else {
+        // Show the first error message for the current step
+        const firstError = fieldsToValidate
+          .map(field => errors[field])
+          .find(error => error?.message);
+        
+        if (firstError?.message) {
+          setError(firstError.message);
+        }
+      }
+    } catch (error) {
+      console.error("Error in handleNextStep:", error);
+      setError("حدث خطأ أثناء التحقق من البيانات");
     }
-  }, []);
-
-  const handleServiceSelection = (service: Service) => {
-    setSelectedService({
-      category: service.name,
-      id: service.name.toLowerCase(),
-      name: service.name,
-      price: "50", // Default price
-      duration: "1", // Default duration in hours
-    });
-    setActiveStep(2);
   };
 
-  const handleAddressChange = (field: string, value: string) => {
-    setProblemDetails((prev) => ({
-      ...prev,
-      address: {
-        ...prev.address,
-        [field]: value,
-      },
-    }));
+  const handlePreviousStep = () => {
+    setError(null);
+    setActiveStep((prev) => prev - 1);
   };
 
-  const handleProblemDetailsChange = (field: string, value: string) => {
-    setProblemDetails((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  const onSubmit: SubmitHandler<RequestFormData> = async (data) => {
+    try {
+      const payload = {
+        userCustomerId: Number(localStorage.getItem("userId")) || 0,
+        userTechId: data.technician.id,
+        description: data.description,
+        location: data.location,
+        dateTime: data.date.toISOString(),
+        status: 1,
+        serviceId: data.service.id,
+        attachmentBase64: data.attachmentBase64,
+      };
+
+      await createRequestMutation.mutateAsync(payload);
+    } catch (error) {
+      console.error("Error submitting request:", error);
+      setError(error instanceof Error ? error.message : "حدث خطأ أثناء إرسال الطلب");
+    }
   };
 
-  const handleCraftsmanSelection = async (craftsman: Craftsman) => {
-    setSelectedCraftsman(craftsman);
-    setIsSubmitting(true);
-
-    // Generate a reference number
-    const reference = `REQ-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // Redirect to success page with request details
-    const searchParams = new URLSearchParams({
-      reference,
-      craftsman: craftsman.name,
-      service: selectedService?.name || "",
-      address: problemDetails.address.line1,
-      city: problemDetails.address.city,
-      title: problemDetails.title,
-      urgency: problemDetails.urgency,
-    });
-
-    router.push(`/request/success?${searchParams.toString()}`);
-    // router.push(`/request/success`);
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setValue("attachmentBase64", base64String.split(",")[1]);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
-  const handleRequestComplete = () => {
-    // Reset form
-    setActiveStep(1);
-    setSelectedService(null);
-    setSelectedCraftsman(null);
-    setProblemDetails({
-      title: "",
-      description: "",
-      address: {
-        line1: "",
-        line2: "",
-        city: "",
-        zipCode: "",
-      },
-      urgency: "medium",
-    });
-  };
+  const isLoading = isLoadingServices || isLoadingGovernorates || isLoadingCities;
+
+  if (isLoading && activeStep === 1) {
+    return (
+      <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="text-gray-600">جاري تحميل البيانات...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div dir="rtl" className="w-full px-6 py-12">
-      <div className="max-w-4xl mx-auto">
-        {/* Progress Steps */}
-        <div className="w-full p-6 bg-white rounded-lg shadow-md mb-6">
-          <div className="flex items-center w-full mb-6">
-            {activeStep > 1 && (
-              <Button
-                variant="ghost"
-                className="text-blue-600 cursor-pointer"
-                onClick={() => setActiveStep(activeStep - 1)}
-              >
-                <ArrowRight className="ml-2" /> رجوع
-              </Button>
-            )}
-            <h2 className="text-2xl font-bold ml-2">طلب خدمة</h2>
-          </div>
-
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              {requestSteps.map((step) => (
-                <div
-                  key={step.id}
-                  className={`flex flex-col items-center ${activeStep >= step.id ? "text-blue-600" : "text-gray-400"}`}
-                >
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${activeStep >= step.id ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-500"}`}
-                  >
-                    {step.id}
-                  </div>
-                  <span className="text-xs text-center">{step.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="h-1 bg-gray-200 relative">
+    <div className="container mx-auto px-4 py-8">
+      {/* Steps Progress */}
+      <div className="mb-12">
+        <div className="flex justify-between relative">
+          {/* Progress Bar */}
+          <div className="absolute top-4 left-0 right-0 h-1 bg-gray-200 -z-10">
             <div
-              className="absolute top-0 right-0 h-full bg-blue-600"
+              className="h-full bg-blue-600 transition-all duration-300"
               style={{
                 width: `${((activeStep - 1) / (requestSteps.length - 1)) * 100}%`,
               }}
-            ></div>
+            />
           </div>
+
+          {requestSteps.map((step) => (
+            <div
+              key={step.id}
+              className={`flex flex-col items-center ${
+                step.id <= activeStep ? "text-blue-600" : "text-gray-400"
+              }`}
+            >
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-all duration-300 ${
+                  step.id <= activeStep
+                    ? "bg-blue-600 text-white shadow-lg"
+                    : "bg-gray-200"
+                }`}
+              >
+                {step.icon}
+              </div>
+              <div className="text-sm font-medium">{step.name}</div>
+            </div>
+          ))}
         </div>
+      </div>
 
-        {/* Step 1: Select Service */}
-        {activeStep === 1 && (
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-xl font-medium mb-6">
-              اختر الخدمة التي تحتاجها
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {popularServices.map((service, index) => {
-                const ServiceIcon = service.icon;
-                return (
-                  <Card
-                    key={index}
-                    className={`p-6 cursor-pointer transition-all hover:border-blue-500 ${selectedService?.name === service.name ? "border-blue-500" : ""}`}
-                    onClick={() => handleServiceSelection(service)}
-                  >
-                    <div className="flex items-center justify-center mb-4">
-                      <ServiceIcon className="w-12 h-12 text-blue-500" />
-                    </div>
-                    <h3 className="text-lg font-medium text-center">
+      {/* Form Steps */}
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Card className="p-8 max-w-3xl mx-auto shadow-lg">
+          {activeStep === 1 && (
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">اختر الخدمة</h2>
+                <p className="text-gray-600">اختر الخدمة التي تحتاجها</p>
+              </div>
+              <Select
+                value={selectedService?.id.toString()}
+                onValueChange={(value) => {
+                  console.log("Selected service value:", value);
+                  const service = services.find((s) => s.id.toString() === value);
+                  console.log("Found service:", service);
+                  if (service) {
+                    setValue("service", {
+                      id: service.id,
+                      name: service.name,
+                    }, { shouldValidate: true });
+                  }
+                }}
+              >
+                <SelectTrigger className="h-12 text-lg">
+                  <SelectValue placeholder="اختر الخدمة" />
+                </SelectTrigger>
+                <SelectContent>
+                  {services.map((service) => (
+                    <SelectItem key={service.id} value={service.id.toString()}>
                       {service.name}
-                    </h3>
-                  </Card>
-                );
-              })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.service && (
+                <p className="text-red-500 text-sm">{errors.service.message}</p>
+              )}
             </div>
-            <div className="pt-6 flex justify-between">
-              <Button
-                className="bg-gray-500 hover:bg-gray-600 text-white rounded-md whitespace-nowrap cursor-pointer"
-                disabled
+          )}
+
+          {activeStep === 2 && (
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">تفاصيل الموقع</h2>
+                <p className="text-gray-600">حدد موقعك بدقة لتسهيل وصول الفني</p>
+              </div>
+              <Select
+                value={selectedGovernorate?.id.toString()}
+                onValueChange={(value) => {
+                  const governorate = governorates.find(
+                    (g) => g.id.toString() === value,
+                  );
+                  if (governorate) {
+                    setValue("governorate", {
+                      id: governorate.id,
+                      name: governorate.name,
+                    });
+                    setValue("city", {
+                      id: 0,
+                      name: "",
+                      governorateName: "",
+                    });
+                  }
+                }}
               >
-                <ArrowRight className="ml-2" /> السابق
-              </Button>
-              <Button
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-md whitespace-nowrap cursor-pointer"
-                onClick={() => setActiveStep(2)}
-                disabled={!selectedService}
+                <SelectTrigger className="h-12 text-lg">
+                  <SelectValue placeholder="اختر المحافظة" />
+                </SelectTrigger>
+                <SelectContent>
+                  {governorates.map((governorate) => (
+                    <SelectItem key={governorate.id} value={governorate.id.toString()}>
+                      {governorate.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.governorate && (
+                <p className="text-red-500 text-sm">{errors.governorate.message}</p>
+              )}
+
+              <Select
+                value={selectedCity?.id.toString()}
+                onValueChange={(value) => {
+                  const city = allCities.find((c) => c.id.toString() === value);
+                  if (city) {
+                    setValue("city", {
+                      id: city.id,
+                      name: city.name,
+                      governorateName: city.governorateName,
+                    });
+                  }
+                }}
+                disabled={!selectedGovernorate}
               >
-                التالي <ArrowLeft className="mr-2" />
-              </Button>
+                <SelectTrigger className="h-12 text-lg">
+                  <SelectValue placeholder={isLoadingCities ? "جاري التحميل..." : "اختر المدينة"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {allCities
+                    .filter((city) => city.governorateName === selectedGovernorate?.name)
+                    .map((city) => (
+                      <SelectItem key={city.id} value={city.id.toString()}>
+                        {city.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              {errors.city && (
+                <p className="text-red-500 text-sm">{errors.city.message}</p>
+              )}
+
+              <Input
+                placeholder="العنوان التفصيلي"
+                className="h-12 text-lg"
+                {...register("location")}
+              />
+              {errors.location && (
+                <p className="text-red-500 text-sm">{errors.location.message}</p>
+              )}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Step 2: Address Details */}
-        {activeStep === 2 && (
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-xl font-medium mb-6">أدخل تفاصيل العنوان</h3>
-            <div className="space-y-4">
-              <div>
-                <label
-                  htmlFor="line1"
-                  className="block text-sm font-medium mb-2"
-                >
-                  الشارع
-                </label>
-                <Input
-                  id="line1"
-                  value={problemDetails.address.line1}
-                  onChange={(e) => handleAddressChange("line1", e.target.value)}
-                  placeholder="أدخل اسم الشارع"
-                  className="w-full"
-                />
+          {activeStep === 3 && (
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">وصف المشكلة</h2>
+                <p className="text-gray-600">اشرح المشكلة بالتفصيل لمساعدتنا في تقديم أفضل خدمة</p>
               </div>
-              <div>
-                <label
-                  htmlFor="line2"
-                  className="block text-sm font-medium mb-2"
-                >
-                  الحي / المنطقة
-                </label>
-                <Input
-                  id="line2"
-                  value={problemDetails.address.line2}
-                  onChange={(e) => handleAddressChange("line2", e.target.value)}
-                  placeholder="أدخل الحي أو المنطقة"
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="city"
-                  className="block text-sm font-medium mb-2"
-                >
-                  المدينة
-                </label>
-                <Input
-                  id="city"
-                  value={problemDetails.address.city}
-                  onChange={(e) => handleAddressChange("city", e.target.value)}
-                  placeholder="أدخل المدينة"
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="zipCode"
-                  className="block text-sm font-medium mb-2"
-                >
-                  الرمز البريدي
-                </label>
-                <Input
-                  id="zipCode"
-                  value={problemDetails.address.zipCode}
-                  onChange={(e) =>
-                    handleAddressChange("zipCode", e.target.value)
-                  }
-                  placeholder="أدخل الرمز البريدي"
-                  className="w-full"
-                />
-              </div>
-
-              <div className="pt-4 flex justify-between">
-                <Button
-                  className="bg-gray-500 hover:bg-gray-600 text-white rounded-md whitespace-nowrap cursor-pointer"
-                  onClick={() => setActiveStep(1)}
-                >
-                  <ArrowRight className="ml-2" /> السابق
-                </Button>
-                <Button
-                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-md whitespace-nowrap cursor-pointer"
-                  onClick={() => setActiveStep(3)}
-                  disabled={
-                    !problemDetails.address.line1 ||
-                    !problemDetails.address.city
-                  }
-                >
-                  التالي <ArrowLeft className="mr-2" />
-                </Button>
+              <Textarea
+                placeholder="وصف المشكلة بالتفصيل"
+                className="h-32 text-lg resize-none"
+                {...register("description")}
+              />
+              {errors.description && (
+                <p className="text-red-500 text-sm">{errors.description.message}</p>
+              )}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">
+                    إرفاق صورة (اختياري)
+                  </label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="h-12"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">
+                    اختر التاريخ والوقت
+                  </label>
+                  <Calendar
+                    mode="single"
+                    selected={watch("date")}
+                    onSelect={(date) => {
+                      if (date) {
+                        setValue("date", date);
+                      }
+                    }}
+                    className="rounded-md border shadow-sm"
+                  />
+                  {errors.date && (
+                    <p className="text-red-500 text-sm">{errors.date.message}</p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Step 3: Problem Description */}
-        {activeStep === 3 && (
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-xl font-medium mb-6">وصف المشكلة</h3>
-            <div className="space-y-4">
-              <div>
-                <label
-                  htmlFor="title"
-                  className="block text-sm font-medium mb-2"
-                >
-                  عنوان المشكلة
-                </label>
-                <Input
-                  id="title"
-                  value={problemDetails.title}
-                  onChange={(e) =>
-                    handleProblemDetailsChange("title", e.target.value)
-                  }
-                  placeholder="مثال: صنبور يتسرب، انقطاع كهرباء"
-                  className="w-full"
-                />
+          {activeStep === 4 && (
+            <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">اختر الفني</h2>
+                <p className="text-gray-600">اختر الفني المناسب لخدمتك</p>
               </div>
-              <div>
-                <label
-                  htmlFor="description"
-                  className="block text-sm font-medium mb-2"
-                >
-                  وصف المشكلة
-                </label>
-                <Textarea
-                  id="description"
-                  value={problemDetails.description}
-                  onChange={(e) =>
-                    handleProblemDetailsChange("description", e.target.value)
-                  }
-                  placeholder="يرجى وصف المشكلة بالتفصيل..."
-                  className="w-full"
-                  rows={4}
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="urgency"
-                  className="block text-sm font-medium mb-2"
-                >
-                  مستوى الإلحاح
-                </label>
-                <Select
-                  value={problemDetails.urgency}
-                  onValueChange={(value) =>
-                    handleProblemDetailsChange("urgency", value)
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="اختر مستوى الإلحاح" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">منخفض - خلال أسبوع</SelectItem>
-                    <SelectItem value="medium">متوسط - خلال يومين</SelectItem>
-                    <SelectItem value="high">عالي - اليوم</SelectItem>
-                    <SelectItem value="urgent">عاجل - في أقرب وقت</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="pt-4 flex justify-between">
-                <Button
-                  className="bg-gray-500 hover:bg-gray-600 text-white rounded-md whitespace-nowrap cursor-pointer"
-                  onClick={() => setActiveStep(2)}
-                >
-                  <ArrowRight className="ml-2" /> السابق
-                </Button>
-                <Button
-                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-md whitespace-nowrap cursor-pointer"
-                  onClick={() => setActiveStep(4)}
-                  disabled={
-                    !problemDetails.title || !problemDetails.description
-                  }
-                >
-                  التالي <ArrowLeft className="mr-2" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 4: Select Craftsman */}
-        {activeStep === 4 && (
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-xl font-medium mb-6">اختر الفني المناسب</h3>
-            <div className="max-h-[60vh] overflow-y-auto custom-scrollbar">
-              <div className="space-y-3">
-                {availableCraftsmen
-                  .filter((craftsman) => craftsman.available)
-                  .map((craftsman) => (
+              {isLoadingTechnicians ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                </div>
+              ) : technicians.length === 0 ? (
+                <div className="text-center text-gray-600 py-4">
+                  لا يوجد فنيين متاحين في هذه المنطقة لهذه الخدمة
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {technicians.map((technician) => (
                     <Card
-                      key={craftsman.id}
-                      className="p-4 cursor-pointer hover:border-blue-500 transition-colors hover:shadow-md"
-                      onClick={() => handleCraftsmanSelection(craftsman)}
+                      key={technician.id}
+                      className={`p-6 cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                        watch("technician")?.id === technician.id
+                          ? "border-2 border-blue-600 bg-blue-50"
+                          : "hover:border-blue-200"
+                      }`}
+                      onClick={() => setValue("technician", {
+                        id: technician.id,
+                        fullName: technician.fullName,
+                      })}
                     >
-                      <div className="flex items-start">
-                        <div className="bg-gray-200 p-3 rounded-full ml-4">
-                          <UserCircle className="w-12 h-12 text-gray-600" />
-                        </div>
-                        <div className="flex-grow">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h4 className="text-lg font-medium">
-                                {craftsman.name}
-                              </h4>
-                              <p className="text-sm text-gray-600">
-                                {craftsman.specialization}
-                              </p>
+                      <div className="flex items-start space-x-4">
+                        {technician.imageBase64 && (
+                          <div className="w-16 h-16 rounded-full overflow-hidden">
+                            <img
+                              src={`data:image/jpeg;base64,${technician.imageBase64}`}
+                              alt={technician.fullName}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                            {technician.fullName}
+                          </h3>
+                          <p className="text-sm text-gray-600 mb-2">
+                            {technician.serviceName}
+                          </p>
+                          <p className="text-sm text-gray-500 mb-3">
+                            {technician.serviceDescription}
+                          </p>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <div className="flex items-center">
+                              <span className="text-yellow-400 mr-1">★</span>
+                              <span>{technician.averageRate.toFixed(1)}</span>
                             </div>
-                            <div className="text-left">
-                              <div className="text-sm font-medium text-blue-600 mb-1">
-                                {craftsman.hourlyRate} جنيه / ساعة
-                              </div>
-                              <div className="flex items-center">
-                                <Star className="w-4 h-4 text-yellow-400 fill-current ml-1" />
-                                <span className="text-sm">
-                                  {craftsman.rating} ({craftsman.completedJobs}{" "}
-                                  مهمة)
-                                </span>
-                              </div>
-                            </div>
+                            <span className="mx-2">•</span>
+                            <span>{technician.address.city}</span>
+                            <span className="mx-2">•</span>
+                            <span className="text-green-600">
+                              {technician.phoneNumber}
+                            </span>
                           </div>
                         </div>
                       </div>
                     </Card>
                   ))}
-              </div>
+                </div>
+              )}
+              {errors.technician && (
+                <p className="text-red-500 text-sm">{errors.technician.message}</p>
+              )}
             </div>
-            <style jsx global>{`
-              .custom-scrollbar::-webkit-scrollbar {
-                width: 6px;
-              }
-              .custom-scrollbar::-webkit-scrollbar-track {
-                background: #f1f1f1;
-                border-radius: 3px;
-              }
-              .custom-scrollbar::-webkit-scrollbar-thumb {
-                background: #888;
-                border-radius: 3px;
-              }
-              .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                background: #666;
-              }
-            `}</style>
-            <div className="pt-4 flex justify-between mt-4 border-t">
-              <Button
-                className="bg-gray-500 hover:bg-gray-600 text-white rounded-md whitespace-nowrap cursor-pointer"
-                onClick={() => setActiveStep(3)}
-              >
-                <ArrowRight className="ml-2" /> السابق
-              </Button>
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* Loading State */}
-        {isSubmitting && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-8 rounded-lg shadow-xl text-center">
-              <div className="flex flex-col items-center justify-center space-y-4">
-                <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                <p className="text-lg text-gray-600">جاري إرسال طلبك...</p>
-              </div>
-            </div>
+          {/* Navigation Buttons */}
+          <div className="flex justify-between mt-8 pt-6 border-t">
+            {activeStep > 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handlePreviousStep}
+                className="h-12 px-8"
+              >
+                السابق
+              </Button>
+            )}
+            {activeStep < 4 ? (
+              <Button
+                type="button"
+                onClick={handleNextStep}
+                className="h-12 px-8"
+              >
+                التالي
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={createRequestMutation.isPending}
+                className="h-12 px-8"
+              >
+                {createRequestMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    جاري الإرسال...
+                  </>
+                ) : (
+                  "إرسال الطلب"
+                )}
+              </Button>
+            )}
           </div>
-        )}
-      </div>
+        </Card>
+      </form>
+
+      {error && (
+        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-red-600 text-center">{error}</p>
+        </div>
+      )}
     </div>
   );
 }
