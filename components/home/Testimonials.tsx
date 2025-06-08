@@ -8,7 +8,54 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
-export const Testimonials: React.FC = () => {
+// Define the type for the review data
+interface Address {
+  street: string;
+  buildingNumber: string;
+  apartmentNumber: string;
+  postalCode: string;
+  city: string;
+  governorate: string;
+}
+
+interface User {
+  id: number;
+  userName: string | null;
+  email: string;
+  bsd: string;
+  address: Address;
+  fullName: string;
+  imageBase64: string | null;
+  phoneNumber: string;
+  createdDateTime: string;
+  countRequestComplate: number;
+}
+
+interface UserTech extends User {
+  serviceId: number;
+  serviceName: string | null;
+  serviceDescription: string | null;
+  averageRate: number;
+}
+
+interface Review {
+  description: string;
+  id: number;
+  rate: number;
+  userTechId: number;
+  userCustomerId: number;
+  requestServiceId: number;
+  userCustomer: User;
+  userTech: UserTech;
+  requestDateTIme: string;
+  serviceId: number;
+  serviceName: string;
+}
+
+export const Testimonials: React.FC<{ reviews: Review[] }> = ({ reviews }) => {
+
+
+  console.log("Reviews:", reviews);
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
       loop: true,
@@ -40,56 +87,51 @@ export const Testimonials: React.FC = () => {
     emblaApi.on("reInit", onSelect);
   }, [emblaApi, onSelect]);
 
-  const testimonials = [
-    {
-      id: 1,
-      name: "أحمد محمد",
-      role: "عميل",
-      service: "كهرباء",
-      comment: "خدمة ممتازة وسريعة. الفني كان محترف جداً وأنجز العمل بإتقان.",
-      rating: 5,
-    },
-    {
-      id: 2,
-      name: "سارة أحمد",
-      role: "عميلة",
-      service: "تنظيف",
-      comment: "تجربة رائعة مع صنايعي. سهولة في الحجز وجودة في التنفيذ.",
-      rating: 5,
-    },
-    {
-      id: 3,
-      name: "محمد علي",
-      role: "عميل",
-      service: "سباكة",
-      comment: "أسعار معقولة وخدمة احترافية. أنصح بالتعامل معهم.",
-      rating: 4,
-    },
-    {
-      id: 4,
-      name: "نورا حسين",
-      role: "عميلة",
-      service: "دهان",
-      comment: "النتيجة فاقت توقعاتي. الفني كان محترف ودقيق في عمله.",
-      rating: 2,
-    },
-    {
-      id: 5,
-      name: "يوسف محمود",
-      role: "عميل",
-      service: "نجارة",
-      comment: "العمل كان ممتاز والتنفيذ كان سريع. شكراً لكم.",
-      rating: 5,
-    },
-    {
-      id: 6,
-      name: "ليلى كريم",
-      role: "عميلة",
-      service: "صيانة",
-      comment: "خدمة ممتازة وفريق عمل محترف. سأعود للتعامل معهم مرة أخرى.",
-      rating: 3,
-    },
-  ];
+  // Helper function to render stars
+  const renderStars = (rating: number) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+
+    // Add full stars
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(
+        <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+      );
+    }
+
+    // Add half star if needed
+    if (hasHalfStar) {
+      stars.push(
+        <div key="half" className="relative w-5 h-5">
+          <Star className="absolute w-5 h-5 text-yellow-400" />
+          <div className="absolute w-2.5 h-5 overflow-hidden">
+            <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+          </div>
+        </div>
+      );
+    }
+
+    // Add empty stars
+    const emptyStars = 5 - Math.ceil(rating);
+    for (let i = 0; i < emptyStars; i++) {
+      stars.push(
+        <Star key={`empty-${i}`} className="w-5 h-5 text-yellow-400" />
+      );
+    }
+
+    return stars;
+  };
+
+  // Format date to be more readable
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
   return (
     <section className="py-16 bg-gray-50 overflow-hidden">
@@ -102,33 +144,37 @@ export const Testimonials: React.FC = () => {
           {/* Carousel Container */}
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex">
-              {testimonials.map((testimonial, index) => (
+              {reviews?.map((review) => (
                 <div
-                  key={index}
+                  key={review.id}
                   className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_50%] md:flex-[0_0_33.333%] lg:flex-[0_0_25%] pl-4"
                 >
                   <Card className="p-4 flex flex-col justify-center items-end w-full hover:shadow-lg transition-shadow h-full bg-white mx-2">
                     <div className="flex gap-1 mb-4">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className="w-5 h-5 fill-yellow-400 text-yellow-400"
-                        />
-                      ))}
+                      {renderStars(review.rate)}
                     </div>
-                    <p className="text-gray-600 mb-2 text-base">
-                      &quot;الخدمة: {testimonial.service}&quot;
-                    </p>
-                    <p className="text-gray-600 mb-4 text-end text-sm">
-                      {testimonial.comment}
-                    </p>
-                    <div className="border-t pt-3 w-full flex flex-col items-end">
-                      <h4 className="font-semibold text-base">
-                        {testimonial.name}
-                      </h4>
-                      <p className="text-gray-500 text-sm">
-                        {testimonial.role}
+                    <div className="flex items-center justify-end w-full mb-3 gap-2">
+                      <p className="text-gray-700 font-semibold text-base">
+                        {review.serviceName}
                       </p>
+                      <p className="text-gray-600 text-base">الخدمة:</p>
+                    </div>
+                    <p className="text-gray-600 mb-4 text-end text-sm">
+                      {review.description}
+                    </p>
+                    <p className="text-gray-500 text-xs mb-3 self-start">
+                      {formatDate(review.requestDateTIme)}
+                    </p>
+                    <div className="border-t pt-3 w-full flex justify-between items-center">
+                      <div className="text-xs text-gray-500">
+                        الفني: {review.userTech.fullName}
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <h4 className="font-semibold text-base">
+                          {review.userCustomer.fullName}
+                        </h4>
+                        <p className="text-gray-500 text-sm">عميل</p>
+                      </div>
                     </div>
                   </Card>
                 </div>

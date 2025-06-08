@@ -7,6 +7,8 @@ import { Heading } from "./home/Heading";
 import { HowItWorks } from "./home/HowItWorks";
 import { PopularServices } from "./home/PopularServices";
 import { Testimonials } from "./home/Testimonials";
+import { useQuery } from "@tanstack/react-query";
+import { getReviews } from "@/app/services";
 
 const Main: React.FC = () => {
   const popularServices = [
@@ -17,6 +19,13 @@ const Main: React.FC = () => {
     { name: "البستنة", icon: Leaf },
     { name: "التنظيف", icon: Brush },
   ];
+
+  const {data:reviews, isLoading, isSuccess} = useQuery({
+    queryKey: ["reviews"],
+    queryFn: getReviews
+  })
+
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -30,7 +39,7 @@ const Main: React.FC = () => {
       <HowItWorks />
 
       {/* Testimonials Section */}
-      <Testimonials />
+      <Testimonials reviews={reviews?.data} />
     </div>
   );
 };
