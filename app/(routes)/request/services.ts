@@ -67,7 +67,8 @@ export const requestService = {
     try {
       const response = await axiosInstance.get<ApiResponse<Service[]>>(
         `/Lookups/GetAllServices`,
-      );        
+      );
+      // Return the data array from the response, or empty array if data is null
       return response.data.data || [];
     } catch (error) {
       console.error("Error fetching services:", error);

@@ -370,11 +370,19 @@ export default function ProfileOrders({
           dir="rtl"
           value={orderStatusTab} // Use the determined value
         >
-          <TabsList className="grid w-full grid-cols-4 rtl mb-6">
-            <TabsTrigger value="مفعل">قيد التنفيذ</TabsTrigger>
-            <TabsTrigger value="مكتمل">مكتملة</TabsTrigger>
-            <TabsTrigger value="جديد">{isTechnician ? "الطلبات الواردة" : "طلبات جديدة"}</TabsTrigger>
-            <TabsTrigger value="مرفوض">مرفوض</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 rtl mb-6 gap-1">
+            <TabsTrigger value="مفعل" className="text-xs sm:text-sm whitespace-nowrap">
+              قيد التنفيذ
+            </TabsTrigger>
+            <TabsTrigger value="مكتمل" className="text-xs sm:text-sm whitespace-nowrap">
+              مكتملة
+            </TabsTrigger>
+            <TabsTrigger value="جديد" className="text-xs sm:text-sm whitespace-nowrap">
+              {isTechnician ? "الطلبات الواردة" : "طلبات جديدة"}
+            </TabsTrigger>
+            <TabsTrigger value="مرفوض" className="text-xs sm:text-sm whitespace-nowrap">
+              مرفوض
+            </TabsTrigger>
           </TabsList>
 
           {["مفعل", "مكتمل", "جديد", "مرفوض"].map((status) => (

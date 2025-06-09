@@ -39,8 +39,6 @@ export default function RequestService() {
   const [activeStep, setActiveStep] = useState<number>(1);
   const [error, setError] = useState<string | null>(null);
 
-
-
   const {
     register,
     handleSubmit,
@@ -72,11 +70,44 @@ export default function RequestService() {
     queryFn: requestService.getAllCities,
   });
 
-
-
   const selectedGovernorate = watch("governorate");
   const selectedCity = watch("city");
   const selectedService = watch("service");
+
+  // Single useEffect to handle URL parameters
+  useEffect(() => {
+    if (typeof window === "undefined" || !Array.isArray(services) || services.length === 0) {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const serviceId = params.get("service");
+    const serviceName = params.get("name");
+    const serviceDescription = params.get("description");
+    
+    if (!serviceId || !serviceName) {
+      return;
+    }
+
+    try {
+      const foundService = services.find(s => s.id.toString() === serviceId);
+      
+      if (foundService) {
+        setValue("service", {
+          id: foundService.id,
+          name: serviceName,
+        }, { shouldValidate: true });
+        
+        if (serviceDescription) {
+          setValue("description", serviceDescription, { shouldValidate: false });
+        }
+        
+        setActiveStep(2);
+      }
+    } catch (error) {
+      console.error("Error processing URL parameters:", error);
+    }
+  }, [services, setValue, setActiveStep]);
 
   const { data: technicians = [], isLoading: isLoadingTechnicians } = useQuery({
     queryKey: ["technicians", selectedCity?.id, selectedService?.id],
@@ -199,38 +230,6 @@ export default function RequestService() {
 
   const isLoading = isLoadingServices || isLoadingGovernorates || isLoadingCities;
 
-  useEffect(() => {
-    // Extract and process URL parameters when the component mounts
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const serviceId = params.get("service");
-      const serviceName = params.get("name");
-      const serviceDescription = params.get("description");
-      
-      if (serviceId && serviceName) {
-        // Find the matching service in the loaded services
-        const foundService = services.find(s => s.id.toString() === serviceId);
-        
-        if (foundService) {
-          // Set the service in the form using the passed service name (category name)
-          // instead of the foundService.name
-          setValue("service", {
-            id: foundService.id,
-            name: serviceName, // Use the name from URL params instead of foundService.name
-          }, { shouldValidate: true });
-          
-          // Pre-fill the description field with the service description
-          if (serviceDescription) {
-            setValue("description", `${serviceDescription}`, { shouldValidate: false });
-          }
-          
-          // Automatically advance to the next step if service is selected
-          setActiveStep(2);
-        }
-      }
-    }
-  }, [services, setValue]);
-
   if (isLoading && activeStep === 1) {
     return (
       <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[60vh]">
@@ -289,11 +288,9 @@ export default function RequestService() {
                 <p className="text-gray-600">اختر الخدمة التي تحتاجها</p>
               </div>
               <Select
-                value={selectedService?.id.toString()}
+                value={selectedService?.id?.toString()}
                 onValueChange={(value) => {
-                  console.log("Selected service value:", value);
                   const service = services.find((s) => s.id.toString() === value);
-                  console.log("Found service:", service);
                   if (service) {
                     setValue("service", {
                       id: service.id,
@@ -302,11 +299,11 @@ export default function RequestService() {
                   }
                 }}
               >
-                <SelectTrigger className=" py-8 text-xl w-[100%] ">
+                <SelectTrigger className="py-8 text-xl w-[100%]">
                   <SelectValue placeholder="اختر الخدمة" />
                 </SelectTrigger>
                 <SelectContent>
-                  {services.map((service) => (
+                  {Array.isArray(services) && services.map((service) => (
                     <SelectItem key={service.id} value={service.id.toString()}>
                       {service.name}
                     </SelectItem>
@@ -314,7 +311,7 @@ export default function RequestService() {
                 </SelectContent>
               </Select>
               {errors.service && (
-                <p className="text-red-500 text-sm">{errors.service.message}</p>
+                <p className="text-red-500 text-base">{errors.service.message}</p>
               )}
             </div>
           )}
@@ -431,8 +428,8 @@ export default function RequestService() {
               </div>
               
               {/* Date selection card */}
-              <div className="bg-green-50 rounded-lg p-6 border border-green-100">
-                <div className="flex items-start space-x-4 gap-3 rtl:space-x-reverse mb-4">
+              <div className=" rounded-lg py-6 border border-green-100">
+                <div className="flex items-start space-x-4 gap-3 px-6 rtl:space-x-reverse mb-4">
                   <div className="rounded-full bg-green-100 p-2 text-green-600">
                     <Clock className="w-5 h-5" />
                   </div>
@@ -442,42 +439,88 @@ export default function RequestService() {
                   </div>
                 </div>
                 
-                <div className="bg-white w-full rounded-lg shadow-sm p-4">
-                  <div className="flex justify-center w-full">
-                    <Calendar
-                      mode="single"
-                      selected={watch("date")}
-                      onSelect={(date) => {
-                        if (date) {
-                          setValue("date", date);
-                        }
-                      }}
-                      className="w-full mx-auto"
-                      classNames={{
-                        root: "w-full",
-                        month: "w-full",
-                        table: "w-full",
-                        row: "w-full justify-between",
-                        cell: "w-[14.28%] p-0",
-                        day: "w-full h-10 p-0 mx-auto flex items-center justify-center rounded-md hover:bg-green-100 aria-selected:bg-green-600",
-                        nav_button: "h-9 w-9 bg-green-50 p-0 hover:bg-green-100",
-                        nav_button_previous: "absolute left-1",
-                        nav_button_next: "absolute right-1",
-                        caption: "relative flex items-center justify-center py-4 px-10",
-                        caption_label: "text-lg font-semibold",
-                        head_cell: "text-gray-500 font-normal w-[14.28%] text-center",
-                      }}
-                      disabled={(date) => {
-                        // Disable dates in the past
-                        return date < new Date(new Date().setHours(0, 0, 0, 0));
-                      }}
-                    />
-                  </div>
-                </div>
-                {errors.date && (
-                  <p className="text-red-500 text-sm mt-2">{errors.date.message}</p>
-                )}
-              </div>
+                <div className="bg-white w-full rounded-lg shadow-sm  ">
+                  <div className="flex  w-full">
+                    {/* Mobile Calendar (hidden on desktop) */}
+                    <div className="sm:hidden  w-full">
+                      <Calendar
+                        mode="single"
+                        selected={watch("date")}
+                        onSelect={(date) => {
+                          if (date) {
+                            setValue("date", date);
+                          }
+                        }}
+                        className="w-full "
+                        classNames={{
+                          root: "w-full",
+                          month: "w-full",
+                          table: "w-full border-collapse",
+                          // row: "flex w-full justify-between",
+                          // cell: "text-center p-0 relative w-[14.28%] before:pt-[100%]",
+                          // day: "absolute inset-0 flex items-center justify-center p-0 text-xs font-normal hover:bg-green-100 rounded-full aria-selected:bg-green-600 aria-selected:text-white",
+                          // nav_button: "h-7 w-7 bg-green-50 p-0 hover:bg-green-100 rounded-full flex items-center justify-center",
+                          // nav_button_previous: "absolute left-1",
+                          // nav_button_next: "absolute right-1",
+                          // caption: "relative flex items-center justify-center py-2 px-4",
+                          // caption_label: "text-sm font-medium",
+                          // head_cell: "text-xs text-gray-500 font-normal text-center py-1",
+                          // day_today: "font-bold border border-green-600 text-green-600",
+                          // day_outside: "text-gray-300",
+                          // day_disabled: "text-gray-300 hover:bg-transparent",
+                          // day_range_middle: "rounded-none",
+                          // day_hidden: "invisible",
+                        }}
+                        disabled={(date) => {
+                          return date < new Date(new Date().setHours(0, 0, 0, 0));
+                        }}
+                        fromDate={new Date()}
+                      />
+                    </div>
+                    
+         {/* Desktop Calendar (hidden on mobile) - with fixed day names */}
+<div className="hidden sm:block w-full">
+  <div className="flex items-center justify-center w-full">
+    <Calendar
+      mode="single"
+      selected={watch("date")}
+      onSelect={(date) => {
+        if (date) {
+          setValue("date", date);
+        }
+      }}
+      className="w-full mx-auto"
+      classNames={{
+        root: "w-full",
+        month: "w-full",
+        table: "w-full border-collapse",
+        row: "flex w-full justify-between",
+        cell: "flex-1 text-center p-0",
+        day: "w-full h-10 flex items-center justify-center text-base rounded-md hover:bg-green-100 aria-selected:bg-green-600 aria-selected:text-white",
+        nav_button: "h-9 w-9 bg-green-50 p-0 hover:bg-green-100",
+        nav_button_previous: "absolute left-1",
+        nav_button_next: "absolute right-1",
+        caption: "relative flex items-center justify-center py-4 px-10",
+        caption_label: "text-lg font-semibold",
+        head_row: "flex w-full justify-between",
+        head_cell: "flex-1 text-gray-500 font-medium text-center text-sm py-2",
+        day_today: "font-bold border border-green-600 text-green-600",
+        day_outside: "text-gray-300",
+        day_disabled: "text-gray-300 hover:bg-transparent",
+      }}
+      disabled={(date) => {
+        return date < new Date(new Date().setHours(0, 0, 0, 0));
+      }}
+      fromDate={new Date()}
+    />
+  </div>
+</div>
+    </div>
+  </div>
+  {errors.date && (
+    <p className="text-red-500 text-sm mt-2">{errors.date.message}</p>
+  )}
+</div>
               
               {/* Image upload card */}
               <div className="bg-purple-50 rounded-lg p-6 border border-purple-100">
