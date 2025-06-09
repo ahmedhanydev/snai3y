@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm, type SubmitHandler } from "react-hook-form";
@@ -39,6 +39,8 @@ export default function RequestService() {
   const [activeStep, setActiveStep] = useState<number>(1);
   const [error, setError] = useState<string | null>(null);
 
+
+
   const {
     register,
     handleSubmit,
@@ -69,6 +71,8 @@ export default function RequestService() {
     queryKey: ["cities"],
     queryFn: requestService.getAllCities,
   });
+
+
 
   const selectedGovernorate = watch("governorate");
   const selectedCity = watch("city");
@@ -195,6 +199,38 @@ export default function RequestService() {
 
   const isLoading = isLoadingServices || isLoadingGovernorates || isLoadingCities;
 
+  useEffect(() => {
+    // Extract and process URL parameters when the component mounts
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const serviceId = params.get("service");
+      const serviceName = params.get("name");
+      const serviceDescription = params.get("description");
+      
+      if (serviceId && serviceName) {
+        // Find the matching service in the loaded services
+        const foundService = services.find(s => s.id.toString() === serviceId);
+        
+        if (foundService) {
+          // Set the service in the form using the passed service name (category name)
+          // instead of the foundService.name
+          setValue("service", {
+            id: foundService.id,
+            name: serviceName, // Use the name from URL params instead of foundService.name
+          }, { shouldValidate: true });
+          
+          // Pre-fill the description field with the service description
+          if (serviceDescription) {
+            setValue("description", `${serviceDescription}`, { shouldValidate: false });
+          }
+          
+          // Automatically advance to the next step if service is selected
+          setActiveStep(2);
+        }
+      }
+    }
+  }, [services, setValue]);
+
   if (isLoading && activeStep === 1) {
     return (
       <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[60vh]">
@@ -207,7 +243,7 @@ export default function RequestService() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8" dir="rtl">
       {/* Steps Progress */}
       <div className="mb-12">
         <div className="flex justify-between relative">
@@ -266,7 +302,7 @@ export default function RequestService() {
                   }
                 }}
               >
-                <SelectTrigger className="h-12 text-lg">
+                <SelectTrigger className=" py-8 text-xl w-[100%] ">
                   <SelectValue placeholder="اختر الخدمة" />
                 </SelectTrigger>
                 <SelectContent>
@@ -308,7 +344,7 @@ export default function RequestService() {
                   }
                 }}
               >
-                <SelectTrigger className="h-12 text-lg">
+                <SelectTrigger className="h-12 py-8 text-xl w-[100%]">
                   <SelectValue placeholder="اختر المحافظة" />
                 </SelectTrigger>
                 <SelectContent>
@@ -337,7 +373,7 @@ export default function RequestService() {
                 }}
                 disabled={!selectedGovernorate}
               >
-                <SelectTrigger className="h-12 text-lg">
+                <SelectTrigger className="h-12 text-xl py-8 w-[100%]">
                   <SelectValue placeholder={isLoadingCities ? "جاري التحميل..." : "اختر المدينة"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -351,62 +387,148 @@ export default function RequestService() {
                 </SelectContent>
               </Select>
               {errors.city && (
-                <p className="text-red-500 text-sm">{errors.city.message}</p>
+                <p className="text-red-500 text-base">{errors.city.message}</p>
               )}
 
               <Input
                 placeholder="العنوان التفصيلي"
-                className="h-12 text-lg"
+                className="h-12 text-xl py-8 w-[100%]"
                 {...register("location")}
               />
               {errors.location && (
-                <p className="text-red-500 text-sm">{errors.location.message}</p>
+                <p className="text-red-500 text-base">{errors.location.message}</p>
               )}
             </div>
           )}
 
           {activeStep === 3 && (
-            <div className="space-y-6">
-              <div className="text-center mb-8">
+            <div className="space-y-8">
+              <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">وصف المشكلة</h2>
                 <p className="text-gray-600">اشرح المشكلة بالتفصيل لمساعدتنا في تقديم أفضل خدمة</p>
               </div>
-              <Textarea
-                placeholder="وصف المشكلة بالتفصيل"
-                className="h-32 text-lg resize-none"
-                {...register("description")}
-              />
-              {errors.description && (
-                <p className="text-red-500 text-sm">{errors.description.message}</p>
-              )}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700">
-                    إرفاق صورة (اختياري)
-                  </label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    className="h-12"
-                  />
+              
+              {/* Problem description card */}
+              <div className="bg-blue-50 rounded-lg p-6 border border-blue-100">
+                <div className="flex items-start space-x-4 gap-3 rtl:space-x-reverse mb-4">
+                  {/* <div className="rounded-full bg-blue-100  p-2 text-blue-600">
+                    <Clock className="w-5 h-5" />
+                  </div> */}
+                  <div className="flex-1">
+                    <h3 className="text-lg font-medium text-gray-800 mb-1">اشرح المشكلة</h3>
+                    <p className="text-sm text-gray-600">كلما كان وصفك دقيقًا، كلما كان الصنايعي أكثر استعدادًا لحل المشكلة</p>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700">
-                    اختر التاريخ والوقت
+                
+                <Textarea
+                  placeholder="وصف المشكلة بالتفصيل (مثال: لدي مشكلة في تسريب المياه من الحمام...)"
+                  className="h-36 text-lg resize-none border-blue-200 focus:border-blue-400 focus:ring-blue-400"
+                  {...register("description")}
+                />
+                {errors.description && (
+                  <p className="text-red-500 text-sm mt-2">{errors.description.message}</p>
+                )}
+              </div>
+              
+              {/* Date selection card */}
+              <div className="bg-green-50 rounded-lg p-6 border border-green-100">
+                <div className="flex items-start space-x-4 gap-3 rtl:space-x-reverse mb-4">
+                  <div className="rounded-full bg-green-100 p-2 text-green-600">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-medium text-gray-800 mb-1">حدد الموعد المناسب</h3>
+                    <p className="text-sm text-gray-600">اختر التاريخ المناسب لزيارة الصنايعي</p>
+                  </div>
+                </div>
+                
+                <div className="bg-white w-full rounded-lg shadow-sm p-4">
+                  <div className="flex justify-center w-full">
+                    <Calendar
+                      mode="single"
+                      selected={watch("date")}
+                      onSelect={(date) => {
+                        if (date) {
+                          setValue("date", date);
+                        }
+                      }}
+                      className="w-full mx-auto"
+                      classNames={{
+                        root: "w-full",
+                        month: "w-full",
+                        table: "w-full",
+                        row: "w-full justify-between",
+                        cell: "w-[14.28%] p-0",
+                        day: "w-full h-10 p-0 mx-auto flex items-center justify-center rounded-md hover:bg-green-100 aria-selected:bg-green-600",
+                        nav_button: "h-9 w-9 bg-green-50 p-0 hover:bg-green-100",
+                        nav_button_previous: "absolute left-1",
+                        nav_button_next: "absolute right-1",
+                        caption: "relative flex items-center justify-center py-4 px-10",
+                        caption_label: "text-lg font-semibold",
+                        head_cell: "text-gray-500 font-normal w-[14.28%] text-center",
+                      }}
+                      disabled={(date) => {
+                        // Disable dates in the past
+                        return date < new Date(new Date().setHours(0, 0, 0, 0));
+                      }}
+                    />
+                  </div>
+                </div>
+                {errors.date && (
+                  <p className="text-red-500 text-sm mt-2">{errors.date.message}</p>
+                )}
+              </div>
+              
+              {/* Image upload card */}
+              <div className="bg-purple-50 rounded-lg p-6 border border-purple-100">
+                <div className="flex items-start space-x-4 gap-3 rtl:space-x-reverse mb-4">
+                  <div className="rounded-full bg-purple-100 p-2 text-purple-600">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-medium text-gray-800 mb-1">إرفاق صورة (اختياري)</h3>
+                    <p className="text-sm text-gray-600">يمكنك إرفاق صورة توضح المشكلة لمساعدة الصنايعي</p>
+                  </div>
+                </div>
+                
+                <div className="mt-2">
+                  <label 
+                    htmlFor="image-upload" 
+                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-white hover:bg-gray-50"
+                  >
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg className="w-8 h-8 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                      </svg>
+                      <p className="mb-1 text-sm text-gray-500"><span className="font-semibold">اضغط لرفع صورة</span> أو اسحب الصورة هنا</p>
+                      <p className="text-xs text-gray-500">PNG, JPG أو JPEG (الحد الأقصى 10MB)</p>
+                    </div>
+                    <Input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
                   </label>
-                  <Calendar
-                    mode="single"
-                    selected={watch("date")}
-                    onSelect={(date) => {
-                      if (date) {
-                        setValue("date", date);
-                      }
-                    }}
-                    className="rounded-md border shadow-sm"
-                  />
-                  {errors.date && (
-                    <p className="text-red-500 text-sm">{errors.date.message}</p>
+                  
+                  {watch("attachmentBase64") && (
+                    <div className="mt-4 flex items-center justify-center">
+                      <div className="relative w-24 h-24 border rounded-md overflow-hidden">
+                        <img 
+                          src={`data:image/jpeg;base64,${watch("attachmentBase64")}`} 
+                          alt="Uploaded preview" 
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setValue("attachmentBase64", "")}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -487,7 +609,7 @@ export default function RequestService() {
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8 pt-6 border-t">
+          <div className={`flex ${activeStep > 1 ? "justify-between" : "justify-end"}   mt-8 pt-6 border-t`}>
             {activeStep > 1 && (
               <Button
                 type="button"
@@ -526,11 +648,11 @@ export default function RequestService() {
         </Card>
       </form>
 
-      {error && (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-600 text-center">{error}</p>
-        </div>
-      )}
-    </div>
-  );
+        {error && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            {error}
+          </div>
+        )}
+      </div>
+  )
 }

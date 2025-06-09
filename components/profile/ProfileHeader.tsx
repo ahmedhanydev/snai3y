@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { Star, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,13 +8,30 @@ interface ProfileHeaderProps {
   userProfile: any;
   isTechnician: boolean;
   setActiveTab: (tab: string) => void;
+  setOrderStatusTab?: (tab: string) => void; // Add this new prop
+  newOrdersCount?: number;
 }
 
-export default function ProfileHeader({ userProfile, isTechnician, setActiveTab }: ProfileHeaderProps) {
+export default function ProfileHeader({ 
+  userProfile, 
+  isTechnician, 
+  setActiveTab,
+  setOrderStatusTab,
+  newOrdersCount = 0
+}: ProfileHeaderProps) {
   // Determine background style based on user type
   const bgStyle = isTechnician 
     ? "from-amber-500/80 via-primary/75 to-primary" 
     : "from-amber-500/80 via-primary/75 to-primary";
+
+  // Function to handle new orders button click
+  const handleNewOrdersClick = () => {
+    setActiveTab("orders");
+    // Also set the order status tab to "جديد"
+    if (setOrderStatusTab) {
+      setOrderStatusTab("جديد");
+    }
+  };
 
   return (
     <div className="relative mb-12 overflow-hidden rounded-t-lg">
@@ -168,6 +185,24 @@ export default function ProfileHeader({ userProfile, isTechnician, setActiveTab 
         
         {/* Quick Action Buttons with improved styling */}
         <div className="flex justify-end gap-2 mt-4">
+          {isTechnician && newOrdersCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1 bg-white/90 hover:bg-white relative"
+              onClick={handleNewOrdersClick} // Use the new handler here
+            >
+              <Bell className="w-4 h-4" /> 
+              <span>الطلبات الجديدة</span>
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs font-bold rounded-full animate-pulse"
+              >
+                {newOrdersCount}
+              </Badge>
+            </Button>
+          )}
+          
           {isTechnician && (
             <Button
               variant="outline"
@@ -178,6 +213,7 @@ export default function ProfileHeader({ userProfile, isTechnician, setActiveTab 
               <Star className="w-4 h-4" /> عرض التقييمات
             </Button>
           )}
+          
           <Button
             variant="outline"
             size="sm"

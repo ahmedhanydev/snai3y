@@ -6,10 +6,12 @@ import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 import {
   getCustomerProfile,
   getTechnicianProfile,
+  getTechnicianNewOrdersCount, // Add this new service function
 } from "./services";
 
 // Import our separated components
@@ -25,6 +27,8 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState("overview");
   const [userId, setUserId] = useState<string | null>(null);
   const [userType, setUserType] = useState<string | null>(null);
+  const [newOrdersCount, setNewOrdersCount] = useState(0);
+  const [orderStatusTab, setOrderStatusTab] = useState("مفعل"); // New state for order status tab
 
   // Initialize user data from localStorage
   useEffect(() => {
@@ -62,6 +66,23 @@ export default function Profile() {
     retry: 1,
     refetchOnWindowFocus: false,
   });
+
+  // Get new orders count for technicians
+  const { data: newOrdersData } = useQuery({
+    queryKey: ['newOrdersCount', userId],
+    queryFn: async () => {
+      if (!userId || userType !== 'technician') return null;
+      return await getTechnicianNewOrdersCount(userId);
+    },
+    enabled: !!userId && userType === 'technician',
+    refetchInterval: 30000 // Refresh every 30 seconds to get updated count
+  });
+
+  useEffect(() => {
+    if (newOrdersData && newOrdersData.data) {
+      setNewOrdersCount(newOrdersData.data);
+    }
+  }, [newOrdersData]);
 
   // Update profile image in localStorage when profile data is fetched
   useEffect(() => {
@@ -148,7 +169,9 @@ export default function Profile() {
           <ProfileHeader 
             userProfile={userProfile} 
             isTechnician={isTechnician} 
-            setActiveTab={setActiveTab} 
+            setActiveTab={setActiveTab}
+            setOrderStatusTab={setOrderStatusTab} // Pass the new function
+            newOrdersCount={newOrdersCount} 
           />
 
           {/* Profile Tabs */}
@@ -161,8 +184,22 @@ export default function Profile() {
           >
             <TabsList className={`grid w-full ${isTechnician ? 'grid-cols-4' : 'grid-cols-3'} lg:w-1/2 rtl`}>
               <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
-              <TabsTrigger value="orders">
-                {!isTechnician ? "طلباتي" : "الطلبات الواردة"}
+              <TabsTrigger value="orders" className="relative">
+                {!isTechnician ? (
+                  "طلباتي"
+                ) : (
+                  <span className="flex items-center">
+                   جميع الطلبات
+                    {/* {newOrdersCount > 0 && (
+                      <Badge 
+                        variant="destructive" 
+                        className="mx-2 h-5 w-5 p-0 flex items-center justify-center text-xs font-bold rounded-full animate-pulse"
+                      >
+                        {newOrdersCount}
+                      </Badge>
+                    )} */}
+                  </span>
+                )}
               </TabsTrigger>
               {isTechnician && (
                 <TabsTrigger value="reviews">التقييمات</TabsTrigger>
@@ -179,6 +216,14 @@ export default function Profile() {
                 userId={userId} 
                 userType={userType}
                 isTechnician={isTechnician}
+                orderStatusTab={orderStatusTab} // Pass the current order status tab
+                setOrderStatusTab={setOrderStatusTab} // Pass the setter
+                onOrdersStatusChange={(newCount) => {
+                  // Update new orders count when orders status changes
+                  if (isTechnician) {
+                    setNewOrdersCount(newCount);
+                  }
+                }}
               />
             </TabsContent>
 
@@ -189,7 +234,10 @@ export default function Profile() {
             )}
 
             <TabsContent value="settings" className="mt-6">
-              <ProfileSettings userProfile={userProfile} />
+              <ProfileSettings 
+                userProfile={userProfile} 
+                isTechnician={isTechnician} 
+              />
             </TabsContent>
           </Tabs>
         </Card>

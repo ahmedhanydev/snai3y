@@ -31,34 +31,34 @@ export default function ServicesPage() {
 
   const services = {
     electrical: [
-      { id: 1, name: "تركيب وحدات إضاءة", duration: "1-2" },
-      { id: 2, name: "صيانة الكهرباء", duration: "2-3" },
-      { id: 3, name: "تركيب مراوح", duration: "1" },
+      { id: 1, name: "تركيب وحدات إضاءة",  },
+      { id: 2, name: "صيانة الكهرباء",  },
+      { id: 3, name: "تركيب مراوح", },
     ],
     plumbing: [
-      { id: 4, name: "إصلاح تسريبات", duration: "1-2" },
-      { id: 5, name: "تركيب أدوات صحية", duration: "2-3" },
-      { id: 6, name: "إصلاح سخانات", duration: "1-2" },
+      { id: 4, name: "إصلاح تسريبات",  },
+      { id: 5, name: "تركيب أدوات صحية",  },
+      { id: 6, name: "إصلاح سخانات",  },
     ],
     carpentry: [
-      { id: 7, name: "تركيب أثاث", duration: "2-4" },
-      { id: 8, name: "إصلاح أبواب ونوافذ", duration: "1-3" },
-      { id: 9, name: "صناعة أثاث مخصص", duration: "3-5" },
+      { id: 7, name: "تركيب أثاث",  },
+      { id: 8, name: "إصلاح أبواب ونوافذ",  },
+      { id: 9, name: "صناعة أثاث مخصص",  },
     ],
     painting: [
-      { id: 10, name: "دهان داخلي", duration: "2-3" },
-      { id: 11, name: "دهان خارجي", duration: "3-4" },
-      { id: 12, name: "ورق حائط", duration: "2-3" },
+      { id: 10, name: "دهان داخلي",  },
+      { id: 11, name: "دهان خارجي",  },
+      { id: 12, name: "ورق حائط",  },
     ],
     maintenance: [
-      { id: 13, name: "صيانة عامة", duration: "2-4" },
-      { id: 14, name: "تركيب أجهزة", duration: "1-2" },
-      { id: 15, name: "إصلاح أجهزة", duration: "2-3" },
+      { id: 13, name: "صيانة عامة",  },
+      { id: 14, name: "تركيب أجهزة",  },
+      { id: 15, name: "إصلاح أجهزة",  },
     ],
     cleaning: [
-      { id: 16, name: "تنظيف منزلي", duration: "3-4" },
-      { id: 17, name: "تنظيف مكاتب", duration: "4-5" },
-      { id: 18, name: "تنظيف واجهات", duration: "3-4" },
+      { id: 16, name: "تنظيف منزلي",  },
+      { id: 17, name: "تنظيف مكاتب",  },
+      { id: 18, name: "تنظيف واجهات",  },
     ],
   };
 
@@ -116,14 +116,10 @@ export default function ServicesPage() {
                   {filteredServices(category.id).map((service) => (
                     <Card key={service.id} className="p-6">
                       <h3 className="text-xl font-bold mb-3">{service.name}</h3>
-                      <div className="flex justify-end items-center mb-4">
-                        <span className="text-gray-600">
-                          المدة: {service.duration} ساعة
-                        </span>
-                      </div>
+                     
                       <Button asChild className="w-full">
                         <Link
-                          href={`/request?category=${category.id}&service=${service.id}&name=${service.name}&duration=${service.duration}`}
+                          href={`/request?category=${category.id}&service=${service.id}&name=${category.name}&description=${service.name}`}
                         >
                           احجز الآن
                         </Link>

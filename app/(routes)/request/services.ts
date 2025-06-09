@@ -1,5 +1,3 @@
-
-
 import axiosInstance from "@/config/axios";
 import axios from "axios";
 
@@ -143,4 +141,21 @@ export const requestService = {
       throw error;
     }
   },
-}; 
+
+  async getUserData(userId: number) {
+    try {
+      const response = await axiosInstance.get<ApiResponse<UserTech>>(
+        `/UserCustomer/GetById/${userId}`
+      );
+
+      if (!response.data.success) {
+        throw new Error(`Failed to fetch user data: ${response.data.message}`);
+      }
+
+      return response.data.data; // Return the full user data
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      throw error;
+    }
+  },
+};
