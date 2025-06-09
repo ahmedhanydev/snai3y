@@ -20,7 +20,7 @@ const Main: React.FC = () => {
     { name: "التنظيف", icon: Brush },
   ];
 
-  const {data:reviews, isLoading, isSuccess} = useQuery({
+  const {data:reviews} = useQuery({
     queryKey: ["reviews"],
     queryFn: getReviews
   })
@@ -33,7 +33,15 @@ const Main: React.FC = () => {
       <Heading />
 
       {/* Popular Services */}
-      <PopularServices popularServices={popularServices} />
+      <PopularServices
+        popularServices={popularServices.map((service, idx) => ({
+          id: idx + 1,
+          name: service.name,
+          icon: service.icon,
+          description: "",
+          image: "",
+        }))}
+      />
 
       {/* How It Works Section */}
       <HowItWorks />

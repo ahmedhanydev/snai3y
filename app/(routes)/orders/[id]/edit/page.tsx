@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getRequestById, updateRequest } from "@/app/(routes)/profile/services";
 import { requestService } from "@/app/(routes)/request/services";
+import Image from "next/image";
 
 export default function EditRequestPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -257,7 +258,9 @@ export default function EditRequestPage({ params }: { params: Promise<{ id: stri
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
                 {selectedImage ? (
                   <div className="flex flex-col items-center">
-                    <img 
+                    <Image
+                      width={300}
+                      height={300} 
                       src={selectedImage} 
                       alt="Preview" 
                       className="max-h-64 max-w-full mb-4 rounded-lg" 

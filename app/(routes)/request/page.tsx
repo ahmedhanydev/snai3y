@@ -20,6 +20,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Loader2, MapPin, Clock, FileText, User } from "lucide-react";
 import { requestSchema, type RequestFormData } from "./validations";
 import { toast } from "sonner";
+import Image from "next/image";
 
 interface RequestStep {
   id: number;
@@ -230,6 +231,38 @@ export default function RequestService() {
 
   const isLoading = isLoadingServices || isLoadingGovernorates || isLoadingCities;
 
+  useEffect(() => {
+    // Extract and process URL parameters when the component mounts
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const serviceId = params.get("service");
+      const serviceName = params.get("name");
+      const serviceDescription = params.get("description");
+      
+      if (serviceId && serviceName) {
+        // Find the matching service in the loaded services
+        const foundService = services.find(s => s.id.toString() === serviceId);
+        
+        if (foundService) {
+          // Set the service in the form using the passed service name (category name)
+          // instead of the foundService.name
+          setValue("service", {
+            id: foundService.id,
+            name: serviceName, // Use the name from URL params instead of foundService.name
+          }, { shouldValidate: true });
+          
+          // Pre-fill the description field with the service description
+          if (serviceDescription) {
+            setValue("description", `${serviceDescription}`, { shouldValidate: false });
+          }
+          
+          // Automatically advance to the next step if service is selected
+          setActiveStep(2);
+        }
+      }
+    }
+  }, [services, setValue]);
+
   if (isLoading && activeStep === 1) {
     return (
       <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[60vh]">
@@ -288,9 +321,11 @@ export default function RequestService() {
                 <p className="text-gray-600">اختر الخدمة التي تحتاجها</p>
               </div>
               <Select
-                value={selectedService?.id?.toString()}
+                value={selectedService?.id.toString()}
                 onValueChange={(value) => {
+                  console.log("Selected service value:", value);
                   const service = services.find((s) => s.id.toString() === value);
+                  console.log("Found service:", service);
                   if (service) {
                     setValue("service", {
                       id: service.id,
@@ -299,11 +334,11 @@ export default function RequestService() {
                   }
                 }}
               >
-                <SelectTrigger className="py-8 text-xl w-[100%]">
+                <SelectTrigger className=" py-8 text-xl w-[100%] ">
                   <SelectValue placeholder="اختر الخدمة" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.isArray(services) && services.map((service) => (
+                  {services?.map((service) => (
                     <SelectItem key={service.id} value={service.id.toString()}>
                       {service.name}
                     </SelectItem>
@@ -311,7 +346,7 @@ export default function RequestService() {
                 </SelectContent>
               </Select>
               {errors.service && (
-                <p className="text-red-500 text-base">{errors.service.message}</p>
+                <p className="text-red-500 text-sm">{errors.service.message}</p>
               )}
             </div>
           )}
@@ -558,7 +593,7 @@ export default function RequestService() {
                   {watch("attachmentBase64") && (
                     <div className="mt-4 flex items-center justify-center">
                       <div className="relative w-24 h-24 border rounded-md overflow-hidden">
-                        <img 
+                        <Image 
                           src={`data:image/jpeg;base64,${watch("attachmentBase64")}`} 
                           alt="Uploaded preview" 
                           className="w-full h-full object-cover"
@@ -610,7 +645,7 @@ export default function RequestService() {
                       <div className="flex items-start space-x-4">
                         {technician.imageBase64 && (
                           <div className="w-16 h-16 rounded-full overflow-hidden">
-                            <img
+                            <Image
                               src={`data:image/jpeg;base64,${technician.imageBase64}`}
                               alt={technician.fullName}
                               className="w-full h-full object-cover"

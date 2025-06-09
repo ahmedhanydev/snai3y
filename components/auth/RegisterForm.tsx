@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { PlusOutlined } from "@ant-design/icons";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -78,7 +79,7 @@ export const RegisterForm = () => {
     setValue: setCustomerValue,
     formState: { errors: customerErrors },
   } = useForm<UserCustomer>({
-    resolver: yupResolver(registerSchema),
+    resolver: yupResolver(registerSchema) as any,
     defaultValues: {
       userName: "",
       email: "",
@@ -102,7 +103,7 @@ export const RegisterForm = () => {
     setValue: setTechValue,
     formState: { errors: techErrors },
   } = useForm<UserTechnician>({
-    resolver: yupResolver(technicianSchema),
+    resolver: yupResolver(technicianSchema) as any,
     defaultValues: {
       userName: "",
       email: "",

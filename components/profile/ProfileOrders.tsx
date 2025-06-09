@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Clock, MapPin, User, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, MapPin, User } from "lucide-react";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 import { toast } from "sonner";
 
@@ -64,20 +65,20 @@ const formatAddress = (address: any): string => {
 };
 
 // Helper function to map API status numbers to status types
-const mapOrderStatusNumber = (statusNumber: number): "جديد" | "مفعل" | "مرفوض" | "مكتمل" => {
-  switch (statusNumber) {
-    case 1:
-      return "جديد";
-    case 2:
-      return "مفعل";
-    case 3:
-      return "مرفوض";
-    case 4:
-      return "مكتمل";
-    default:
-      return "جديد";
-  }
-};
+// const mapOrderStatusNumber = (statusNumber: number): "جديد" | "مفعل" | "مرفوض" | "مكتمل" => {
+//   switch (statusNumber) {
+//     case 1:
+//       return "جديد";
+//     case 2:
+//       return "مفعل";
+//     case 3:
+//       return "مرفوض";
+//     case 4:
+//       return "مكتمل";
+//     default:
+//       return "جديد";
+//   }
+// };
 
 // Helper function to get status label in Arabic
 const getStatusLabel = (status: "جديد" | "مفعل" | "مرفوض" | "مكتمل"): string => {
@@ -280,10 +281,10 @@ export default function ProfileOrders({
   };
 
   // Handle reject order
-  const handleRejectOrder = (orderId: number) => {
-    // You may want to use a different status for rejected orders or delete them
-    deleteOrderMutation.mutate(orderId);
-  };
+  // const handleRejectOrder = (orderId: number) => {
+  //   // You may want to use a different status for rejected orders or delete them
+  //   deleteOrderMutation.mutate(orderId);
+  // };
 
   // Handle complete order
   const handleCompleteOrder = (e: React.FormEvent) => {
@@ -331,6 +332,7 @@ export default function ProfileOrders({
       
       // Calculate start and end of visible page range
       let start = Math.max(2, currentPage - 1);
+      // eslint-disable-next-line prefer-const
       let end = Math.min(start + 2, totalPages - 1);
       
       // Adjust if we're near the end

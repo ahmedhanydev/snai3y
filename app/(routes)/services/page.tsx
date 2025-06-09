@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Bolt,
   Brush,
@@ -34,15 +35,18 @@ interface ApiResponse<T> {
   data: T;
 }
 
+
+type ServicesByCategory = Record<string, Service[]>;
+
 // Add this function to fetch services
-export const getServices = async (): Promise<ApiResponse<Service[]>> => {
+ const getServices = async (): Promise<ApiResponse<Service[]>> => {
   const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
   const res = await axios.get<ApiResponse<Service[]>>(`${baseURL}/Lookups/GetAllServices`);
   return res.data;
 };
 
 // Define the category icons mapping
-const categoryIcons: Record<string, any> = {
+const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   "الكهرباء": Bolt,
   "السباكة": Droplet,
   "النجارة": Hammer,
@@ -65,7 +69,7 @@ export default function ServicesPage() {
   interface Category {
     id: string;
     name: string;
-    icon: React.ComponentType<any>;
+    icon: React.ComponentType<{ className?: string }>;
   }
 
 
@@ -95,34 +99,34 @@ export default function ServicesPage() {
   };
 
   // Now update the categories logic
-  const uniqueCategories = Object.values(serviceCategories)
-    .filter((value, index, self) => self.indexOf(value) === index); // Get unique categories
+  const uniqueCategories = useMemo(() =>
+    Object.values(serviceCategories).filter((value, index, self) => self.indexOf(value) === index),
+    []
+  );
 
-  const categories: Category[] = servicesData?.data 
-    ? uniqueCategories.map((category: string) => ({
-        id: category,
-        name: category,
-        icon: categoryIcons[category] || Wrench
-      }))
-    : [];
+  const categories: Category[] = useMemo(() =>
+    servicesData?.data
+      ? uniqueCategories.map((category: string) => ({
+          id: category,
+          name: category,
+          icon: categoryIcons[category] || Wrench,
+        }))
+      : [],
+    [servicesData, uniqueCategories]
+  );
 
   // And update the servicesByCategory logic
-  const servicesByCategory = servicesData?.data
-    ? servicesData.data.reduce((acc: any, service: Service) => {
-        const category = getServiceCategory(service.name);
-        
-        if (!acc[category]) {
-          acc[category] = [];
-        }
-        
-        acc[category].push({
-          ...service,
-          category: category // Add the category to the service object
-        });
-        
-        return acc;
-      }, {})
-    : {};
+  const servicesByCategory: ServicesByCategory = useMemo(() =>
+    servicesData?.data
+      ? servicesData.data.reduce<ServicesByCategory>((acc, service) => {
+          const category = getServiceCategory(service.name);
+          if (!acc[category]) acc[category] = [];
+          acc[category].push(service);
+          return acc;
+        }, {})
+      : {},
+    [servicesData]
+  );
 
     
   // Set default selected category once data is loaded
@@ -133,10 +137,9 @@ export default function ServicesPage() {
   }, [categories, selectedCategory]);
   
   // Filter services based on search query
-  const filteredServices = (categoryId: string) => {
+  const filteredServices = (categoryId: string): Service[] => {
     if (!servicesByCategory || !servicesByCategory[categoryId]) return [];
-    
-    return servicesByCategory[categoryId].filter((service: any) =>
+    return servicesByCategory[categoryId].filter((service: Service) =>
       service.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
   };
@@ -195,15 +198,10 @@ export default function ServicesPage() {
                 <TabsContent key={category.id} value={category.id}>
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {Array.isArray(filteredServices(category.id)) && filteredServices(category.id).length > 0 ? (
-                      filteredServices(category.id).map((service: any) => {
-                        // Get the appropriate icon for this category
+                      filteredServices(category.id).map((service: Service) => {
                         const CategoryIcon = category.icon;
-                        
                         return (
-                          <Card 
-                            key={service.id} 
-                            className="overflow-hidden hover:shadow-xl transition-all duration-300"
-                          >
+                          <Card key={service.id} className="overflow-hidden hover:shadow-xl transition-all duration-300">
                             <div className="bg-gradient-to-r from-blue-50 to-green-50 p-8 border-b">
                               <div className="rounded-full bg-primary/10 w-16 h-16 flex items-center justify-center mb-4">
                                 <CategoryIcon className="w-8 h-8 text-primary" />

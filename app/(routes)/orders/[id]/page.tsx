@@ -27,9 +27,8 @@ import Image from "next/image";
 export default function RequestDetailsPage({ params }: { params: Promise<{ id: string }> }) {
 const router = useRouter();
 const [userType, setUserType] = useState<string | null>(null);
-const [userId,setUserId] = useState<string | null>(null);
-const [newOrdersCount, setNewOrdersCount] = useState(0);
-const [orderStatusTab, setOrderStatusTab] = useState("مفعل"); // New state for order status tab
+const [,setUserId] = useState<string | null>(null);
+ // New state for order status tab
 
 // Initialize user data from localStorage
 useEffect(() => {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Star } from "lucide-react";

@@ -3,8 +3,9 @@
 import { CheckCircle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Suspense } from "react";
 
-export default function Success() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -76,7 +77,6 @@ export default function Success() {
             </div>
 
             <div className="mt-8 space-y-4 w-full max-w-md mx-auto">
-            
               <Button
                 className="bg-blue-600 hover:bg-blue-700 text-white rounded-md whitespace-nowrap cursor-pointer w-full py-6 text-lg"
                 onClick={handleNewRequest}
@@ -88,5 +88,13 @@ export default function Success() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Success() {
+  return (
+    <Suspense>
+      <SuccessContent />
+    </Suspense>
   );
 }

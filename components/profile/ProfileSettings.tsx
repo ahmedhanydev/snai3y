@@ -1,5 +1,5 @@
-import { useState, useEffect, FormEvent, ChangeEvent } from "react";
-import { useRouter } from "next/navigation";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, FormEvent, ChangeEvent } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -17,6 +17,7 @@ import {
   City,
   Governorate
 } from "@/app/(routes)/profile/services";
+import Image from "next/image";
 
 interface ProfileSettingsProps {
   userProfile: any;
@@ -24,7 +25,6 @@ interface ProfileSettingsProps {
 }
 
 export default function ProfileSettings({ userProfile, isTechnician = false }: ProfileSettingsProps) {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(userProfile.imageBase64 || null);
@@ -163,10 +163,12 @@ export default function ProfileSettings({ userProfile, isTechnician = false }: P
         <div className="flex flex-col items-center mb-6">
           <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200 mb-3">
             {previewImage ? (
-              <img 
-                src={previewImage} 
-                alt="صورة الملف الشخصي" 
+              <Image
+                src={previewImage}
+                alt="صورة الملف الشخصي"
                 className="w-full h-full object-cover"
+                width={300}
+                height={300}
               />
             ) : (
               <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">

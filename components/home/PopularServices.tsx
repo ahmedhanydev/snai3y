@@ -1,8 +1,9 @@
 interface Service {
   id: number;
-  title: string;
+  name: string;
   description: string;
   image: string;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 interface PopularServicesProps {

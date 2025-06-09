@@ -4,11 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
+interface UserProfile {
+  imageBase64?: string;
+  fullName: string;
+  averageRate?: number;
+  serviceName?: string;
+  createdDateTime: string;
+  countRequestComplate: number;
+  phoneNumber?: string;
+}
+
 interface ProfileHeaderProps {
-  userProfile: any;
+  userProfile: UserProfile;
   isTechnician: boolean;
   setActiveTab: (tab: string) => void;
-  setOrderStatusTab?: (tab: string) => void; // Add this new prop
+  setOrderStatusTab?: (tab: string) => void;
   newOrdersCount?: number;
 }
 
