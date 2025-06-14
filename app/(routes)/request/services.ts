@@ -63,16 +63,38 @@ export interface ApiResponse<T> {
 
 export const requestService = {
   // Get all services
-  getAllServices: async (): Promise<Service[]> => {
+  getAllServices: async (): Promise<ApiResponse<Service[]>> => {
     try {
+      console.log("Fetching services...");
       const response = await axiosInstance.get<ApiResponse<Service[]>>(
         `/Lookups/GetAllServices`,
       );
-      // Return the data array from the response, or empty array if data is null
-      return response.data.data || [];
+      console.log("Services API response:", {
+        status: response.status,
+        statusText: response.statusText,
+        data: response.data,
+        success: response.data.success,
+        message: response.data.message,
+        errors: response.data.errors,
+        servicesData: response.data.data
+      });
+
+      return response.data;
     } catch (error) {
       console.error("Error fetching services:", error);
-      return [];
+      if (axios.isAxiosError(error)) {
+        console.error("API Error details:", {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message,
+        });
+      }
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "حدث خطأ أثناء تحميل الخدمات",
+        errors: [],
+        data: []
+      };
     }
   },
 

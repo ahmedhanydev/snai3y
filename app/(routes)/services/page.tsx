@@ -16,6 +16,7 @@ import {
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -39,7 +40,7 @@ interface ApiResponse<T> {
 type ServicesByCategory = Record<string, Service[]>;
 
 // Add this function to fetch services
- const getServices = async (): Promise<ApiResponse<Service[]>> => {
+const getServices = async (): Promise<ApiResponse<Service[]>> => {
   const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
   const res = await axios.get<ApiResponse<Service[]>>(`${baseURL}/Lookups/GetAllServices`);
   return res.data;
@@ -56,14 +57,17 @@ const categoryIcons: Record<string, React.ComponentType<{ className?: string }>>
 };
 
 export default function ServicesPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   // Fetch services from the API
-  const { data: servicesData, isLoading: isLoadingServices } = useQuery<ApiResponse<Service[]>>({
+  const { data: servicesResponse, isLoading: isLoadingServices } = useQuery<ApiResponse<Service[]>>({
     queryKey: ["services"],
     queryFn: getServices,
   });
+
+  const services = servicesResponse?.data || [];
 
   // Extract unique categories from the fetched services
   interface Category {
@@ -71,7 +75,6 @@ export default function ServicesPage() {
     name: string;
     icon: React.ComponentType<{ className?: string }>;
   }
-
 
   // Let's create a mapping to categorize the services based on their names
   const serviceCategories: Record<string, string> = {
@@ -105,27 +108,27 @@ export default function ServicesPage() {
   );
 
   const categories: Category[] = useMemo(() =>
-    servicesData?.data
+    services
       ? uniqueCategories.map((category: string) => ({
           id: category,
           name: category,
           icon: categoryIcons[category] || Wrench,
         }))
       : [],
-    [servicesData, uniqueCategories]
+    [services, uniqueCategories]
   );
 
   // And update the servicesByCategory logic
   const servicesByCategory: ServicesByCategory = useMemo(() =>
-    servicesData?.data
-      ? servicesData.data.reduce<ServicesByCategory>((acc, service) => {
+    services
+      ? services.reduce<ServicesByCategory>((acc, service) => {
           const category = getServiceCategory(service.name);
           if (!acc[category]) acc[category] = [];
           acc[category].push(service);
           return acc;
         }, {})
       : {},
-    [servicesData]
+    [services]
   );
 
     
@@ -142,6 +145,15 @@ export default function ServicesPage() {
     return servicesByCategory[categoryId].filter((service: Service) =>
       service.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
+  };
+
+  const handleServiceClick = (category: Category, service: Service) => {
+    const params = new URLSearchParams({
+      serviceId: service.id.toString(),
+      serviceName: service.name,
+      serviceDescription: service.description
+    });
+    router.push(`/request?${params.toString()}`);
   };
 
   return (
@@ -210,12 +222,11 @@ export default function ServicesPage() {
                               <p className="text-gray-600 mb-4">{service.description || 'خدمة منزلية احترافية توفر لك الوقت والجهد'}</p>
                             </div>
                             <div className="p-6 bg-white">
-                              <Button asChild className="w-full h-12 text-base font-medium">
-                                <Link
-                                  href={`/request?category=${encodeURIComponent(category.id)}&service=${encodeURIComponent(service.id)}&name=${encodeURIComponent(category.name)}&description=${encodeURIComponent(service.name)}`}
-                                >
-                                  احجز الآن
-                                </Link>
+                              <Button 
+                                className="w-full h-12 text-base font-medium"
+                                onClick={() => handleServiceClick(category, service)}
+                              >
+                                احجز الآن
                               </Button>
                             </div>
                           </Card>

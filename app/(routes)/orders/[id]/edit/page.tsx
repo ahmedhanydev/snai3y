@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { use } from "react"; // Import use from React
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,8 +17,8 @@ import Image from "next/image";
 export default function EditRequestPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   // Unwrap params using React.use
-  const resolvedParams = use(params);
-  const requestId = parseInt(resolvedParams.id);
+  const {id} = use(params);
+  const requestId = parseInt(id);
   
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -37,10 +36,28 @@ export default function EditRequestPage({ params }: { params: Promise<{ id: stri
   });
 
   // Fetch services for the dropdown
-  const { data: services = [] } = useQuery({
+  const { data: servicesResponse = { data: [], success: true, message: "", errors: [] } } = useQuery({
     queryKey: ['services'],
     queryFn: requestService.getAllServices,
   });
+
+  // Extract the services array from the response
+  const services = servicesResponse.data || [];
+
+
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      requestDateTime: new Date().toISOString(), 
+    }));
+  }, []);
+  // Add logging for services data
+  useEffect(() => {
+    console.log("Services data updated:", services);
+    if (services && !Array.isArray(services)) {
+      console.error("Services is not an array:", services);
+    }
+  }, [services]);
 
   // Fetch request data
   const { data: requestData, isLoading: isRequestLoading, error } = useQuery({
@@ -115,23 +132,6 @@ export default function EditRequestPage({ params }: { params: Promise<{ id: stri
     }));
   };
 
-  // Handle image upload
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setSelectedImage(base64String);
-        setFormData(prev => ({
-          ...prev,
-          attachmentBase64: base64String
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,6 +179,13 @@ export default function EditRequestPage({ params }: { params: Promise<{ id: stri
         </div>
       </div>
     );
+  }
+
+  const  normalizeBase64 =(base64: string): string => {
+    // إذا كانت القيمة تبدأ بـ data: => نعيدها كما هي
+    if (base64.startsWith("data:image/")) return base64;
+    // وإلا نضيف prefix مناسب (افتراض PNG، غيّره لو تحتاج)
+    return `data:image/png;base64,${base64}`;
   }
 
   return (
@@ -255,49 +262,105 @@ export default function EditRequestPage({ params }: { params: Promise<{ id: stri
               <Label htmlFor="image" className="text-base font-medium">
                 صورة توضيحية (اختياري)
               </Label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-primary transition-colors">
                 {selectedImage ? (
                   <div className="flex flex-col items-center">
-                    <Image
-                      width={300}
-                      height={300} 
-                      src={selectedImage} 
-                      alt="Preview" 
-                      className="max-h-64 max-w-full mb-4 rounded-lg" 
-                    />
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="mt-2"
-                      onClick={() => {
-                        setSelectedImage(null);
-                        setFormData(prev => ({
-                          ...prev,
-                          attachmentBase64: ""
-                        }));
-                      }}
-                    >
-                      إزالة الصورة
-                    </Button>
+                    <div className="relative w-full max-w-md mx-auto mb-4">
+                      <Image
+                          src={normalizeBase64(selectedImage)}
+                        alt="صورة الطلب"
+                        width={400}
+                        height={300}
+                        className="rounded-lg object-contain w-full h-auto"
+                        style={{ maxHeight: '300px' }}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => {
+                          const input = document.getElementById('image-upload') as HTMLInputElement;
+                          if (input) input.click();
+                        }}
+                      >
+                        تغيير الصورة
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="destructive" 
+                        onClick={() => {
+                          setSelectedImage(null);
+                          setFormData(prev => ({
+                            ...prev,
+                            attachmentBase64: ""
+                          }));
+                        }}
+                      >
+                        إزالة الصورة
+                      </Button>
+                    </div>
                   </div>
                 ) : (
-                  <div className="py-4">
-                    <label 
-                      htmlFor="image-upload" 
-                      className="cursor-pointer text-primary hover:text-primary/80"
-                    >
-                      انقر لتحميل صورة
-                    </label>
-                    <p className="text-sm text-gray-500 mt-1">أو اسحب الصورة وأفلتها هنا</p>
-                    <input 
-                      id="image-upload" 
-                      type="file" 
-                      accept="image/*" 
-                      className="hidden"
-                      onChange={handleImageChange} 
-                    />
+                  <div className="py-8">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="p-4 rounded-full bg-gray-50">
+                        <svg 
+                          className="w-8 h-8 text-gray-400" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth="2" 
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                      <label 
+                        htmlFor="image-upload" 
+                        className="cursor-pointer text-primary hover:text-primary/80 font-medium"
+                      >
+                        انقر لتحميل صورة
+                      </label>
+                      <p className="text-sm text-gray-500">
+                        أو اسحب الصورة وأفلتها هنا
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        PNG, JPG حتى 5MB
+                      </p>
+                    </div>
                   </div>
                 )}
+                <input 
+                  id="image-upload" 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      // Check file size (5MB limit)
+                      if (file.size > 5 * 1024 * 1024) {
+                        toast.error("حجم الصورة يجب أن لا يتجاوز 5 ميجابايت");
+                        return;
+                      }
+                      
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        const base64String = reader.result as string;
+                        setSelectedImage(base64String);
+                        setFormData(prev => ({
+                          ...prev,
+                          attachmentBase64: base64String
+                        }));
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
               </div>
             </div>
 

@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { requestService } from "./services";
+import { requestService, type Service, type ApiResponse } from "./services";
 import { Calendar } from "@/components/ui/calendar";
 import { Loader2, MapPin, Clock, FileText, User } from "lucide-react";
 import { requestSchema, type RequestFormData } from "./validations";
@@ -56,10 +56,13 @@ export default function RequestService() {
   });
 
   // React Query hooks
-  const { data: services = [], isLoading: isLoadingServices } = useQuery({
+  const { data: servicesResponse = { data: [], success: true, message: "", errors: [] } as ApiResponse<Service[]>, isLoading: isLoadingServices } = useQuery<ApiResponse<Service[]>>({
     queryKey: ["services"],
     queryFn: requestService.getAllServices,
   });
+
+  // Extract the services array from the response
+  const services = servicesResponse.data || [];
 
   const { data: governorates = [], isLoading: isLoadingGovernorates } = useQuery({
     queryKey: ["governorates"],
@@ -75,23 +78,32 @@ export default function RequestService() {
   const selectedCity = watch("city");
   const selectedService = watch("service");
 
-  // Single useEffect to handle URL parameters
+  // Add logging for services data
+  useEffect(() => {
+    console.log("Services data updated:", services);
+    if (services && !Array.isArray(services)) {
+      console.error("Services is not an array:", services);
+    }
+  }, [services]);
+
   useEffect(() => {
     if (typeof window === "undefined" || !Array.isArray(services) || services.length === 0) {
       return;
     }
 
     const params = new URLSearchParams(window.location.search);
-    const serviceId = params.get("service");
-    const serviceName = params.get("name");
-    const serviceDescription = params.get("description");
+    const serviceId = params.get("serviceId");
+    const serviceName = params.get("serviceName");
+    const serviceDescription = params.get("serviceDescription");
     
     if (!serviceId || !serviceName) {
       return;
     }
 
     try {
-      const foundService = services.find(s => s.id.toString() === serviceId);
+      const foundService = Array.isArray(services) ? 
+        services.find(s => s.id === parseInt(serviceId)) : 
+        null;
       
       if (foundService) {
         setValue("service", {
@@ -197,8 +209,52 @@ export default function RequestService() {
     setActiveStep((prev) => prev - 1);
   };
 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("حجم الملف يجب أن لا يتجاوز 10 ميجابايت");
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error("يرجى اختيار ملف صورة صالح");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        try {
+          const base64String = reader.result as string;
+          // Validate base64 string
+          if (!base64String.startsWith('data:image/')) {
+            toast.error("صيغة الصورة غير صالحة");
+            return;
+          }
+          const base64Data = base64String.split(",")[1];
+          console.log("Setting attachmentBase64:", base64Data.substring(0, 50) + "...");
+          setValue("attachmentBase64", base64Data, { shouldValidate: true });
+        } catch (error) {
+          console.error("Error processing image:", error);
+          toast.error("حدث خطأ أثناء معالجة الصورة");
+        }
+      };
+      reader.onerror = () => {
+        toast.error("حدث خطأ أثناء قراءة الملف");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const onSubmit: SubmitHandler<RequestFormData> = async (data) => {
     try {
+      console.log("Form data before submission:", {
+        ...data,
+        attachmentBase64: data.attachmentBase64 ? data.attachmentBase64.substring(0, 50) + "..." : ""
+      });
+      
       const payload = {
         userCustomerId: Number(localStorage.getItem("userId")) || 0,
         userTechId: data.technician.id,
@@ -207,25 +263,18 @@ export default function RequestService() {
         dateTime: data.date.toISOString(),
         status: 1,
         serviceId: data.service.id,
-        attachmentBase64: data.attachmentBase64,
+        attachmentBase64: data.attachmentBase64 || "",
       };
+
+      console.log("Payload being sent:", {
+        ...payload,
+        attachmentBase64: payload.attachmentBase64 ? payload.attachmentBase64.substring(0, 50) + "..." : ""
+      });
 
       await createRequestMutation.mutateAsync(payload);
     } catch (error) {
       console.error("Error submitting request:", error);
       setError(error instanceof Error ? error.message : "حدث خطأ أثناء إرسال الطلب");
-    }
-  };
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setValue("attachmentBase64", base64String.split(",")[1]);
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -262,6 +311,14 @@ export default function RequestService() {
       }
     }
   }, [services, setValue]);
+
+  useEffect(() => {
+    // Only show error if we have a response and it's not successful
+    if (servicesResponse && !isLoadingServices && !servicesResponse.success) {
+      console.error("Failed to load services:", servicesResponse.message);
+      toast.error(servicesResponse.message || "حدث خطأ أثناء تحميل الخدمات");
+    }
+  }, [servicesResponse, isLoadingServices]);
 
   if (isLoading && activeStep === 1) {
     return (
@@ -320,31 +377,41 @@ export default function RequestService() {
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">اختر الخدمة</h2>
                 <p className="text-gray-600">اختر الخدمة التي تحتاجها</p>
               </div>
-              <Select
-                value={selectedService?.id.toString()}
-                onValueChange={(value) => {
-                  console.log("Selected service value:", value);
-                  const service = services.find((s) => s.id.toString() === value);
-                  console.log("Found service:", service);
-                  if (service) {
-                    setValue("service", {
-                      id: service.id,
-                      name: service.name,
-                    }, { shouldValidate: true });
-                  }
-                }}
-              >
-                <SelectTrigger className=" py-8 text-xl w-[100%] ">
-                  <SelectValue placeholder="اختر الخدمة" />
-                </SelectTrigger>
-                <SelectContent>
-                  {services?.map((service) => (
-                    <SelectItem key={service.id} value={service.id.toString()}>
-                      {service.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {isLoadingServices ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                </div>
+              ) : !servicesResponse.success ? (
+                <div className="text-red-500">{servicesResponse.message || "حدث خطأ في تحميل الخدمات"}</div>
+              ) : !Array.isArray(services) ? (
+                <div className="text-red-500">حدث خطأ في تحميل الخدمات</div>
+              ) : (
+                <Select
+                  value={selectedService?.id.toString()}
+                  onValueChange={(value) => {
+                    console.log("Selected service value:", value);
+                    const service = services.find((s: Service) => s.id.toString() === value);
+                    console.log("Found service:", service);
+                    if (service) {
+                      setValue("service", {
+                        id: service.id,
+                        name: service.name,
+                      }, { shouldValidate: true });
+                    }
+                  }}
+                >
+                  <SelectTrigger className="py-8 text-xl w-[100%]">
+                    <SelectValue placeholder="اختر الخدمة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {services.map((service: Service) => (
+                      <SelectItem key={service.id} value={service.id.toString()}>
+                        {service.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               {errors.service && (
                 <p className="text-red-500 text-sm">{errors.service.message}</p>
               )}
@@ -590,18 +657,26 @@ export default function RequestService() {
                     />
                   </label>
                   
+                  {/* Uploaded image preview */}
                   {watch("attachmentBase64") && (
                     <div className="mt-4 flex items-center justify-center">
                       <div className="relative w-24 h-24 border rounded-md overflow-hidden">
                         <Image 
-                          src={`data:image/jpeg;base64,${watch("attachmentBase64")}`} 
+                          src={`data:image/jpeg;base64,${watch("attachmentBase64")}`}
                           alt="Uploaded preview" 
                           className="w-full h-full object-cover"
+                          width={96}
+                          height={96}
+                          onError={(e) => {
+                            console.error("Error loading image:", e);
+                            toast.error("حدث خطأ أثناء عرض الصورة");
+                            setValue("attachmentBase64", "");
+                          }}
                         />
                         <button
                           type="button"
                           onClick={() => setValue("attachmentBase64", "")}
-                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center"
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
                         >
                           ×
                         </button>
@@ -643,12 +718,18 @@ export default function RequestService() {
                       })}
                     >
                       <div className="flex items-start space-x-4">
+                        {/* Technician image */}
                         {technician.imageBase64 && (
                           <div className="w-16 h-16 rounded-full overflow-hidden">
                             <Image
                               src={`data:image/jpeg;base64,${technician.imageBase64}`}
                               alt={technician.fullName}
                               className="w-full h-full object-cover"
+                              width={64}
+                              height={64}
+                              onError={(e) => {
+                                console.error("Error loading technician image:", e);
+                              }}
                             />
                           </div>
                         )}
