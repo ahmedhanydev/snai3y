@@ -1,4 +1,5 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -11,11 +12,9 @@ import {
   Search,
   Wrench,
   Loader2,
-
 } from "lucide-react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -36,14 +35,29 @@ interface ApiResponse<T> {
   data: T;
 }
 
-
 type ServicesByCategory = Record<string, Service[]>;
 
-// Add this function to fetch services
+// Helper function to make proxy requests
+async function proxyRequest(method: string, url: string, data?: any) {
+  const token = localStorage.getItem("token");
+  
+  const response = await fetch('/api/proxy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      method,
+      url,
+      data,
+      token // Pass the token to the proxy
+    })
+  });
+  
+  return response.json();
+}
+
+// Add this function to fetch services using the proxy
 const getServices = async (): Promise<ApiResponse<Service[]>> => {
-  const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
-  const res = await axios.get<ApiResponse<Service[]>>(`${baseURL}/Lookups/GetAllServices`);
-  return res.data;
+  return proxyRequest('GET', '/Lookups/GetAllServices');
 };
 
 // Define the category icons mapping

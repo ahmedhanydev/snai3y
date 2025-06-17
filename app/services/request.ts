@@ -1,6 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import axiosInstance from "@/config/axios";
-import axios from "axios";
 
 export interface Service {
   id: number;
@@ -62,37 +61,70 @@ export interface ApiResponse<T> {
   message: string;
 }
 
+// Helper function to make proxy requests
+async function proxyRequest(method: string, url: string, data?: any) {
+  const token = localStorage.getItem("token");
+  
+  const response = await fetch('/api/proxy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      method,
+      url,
+      data,
+      token // Pass the token to the proxy
+    })
+  });
+  
+  return response.json();
+}
+
 // API functions
 export const requestService = {
   getAllServices: async (): Promise<Service[]> => {
-    const response = await axiosInstance.get<ApiResponse<Service[]>>(   
-      `Lookups/GetAllServices`,
-    );  
-    return response.data.data || [];
+    try {
+      const response = await proxyRequest('GET', 'Lookups/GetAllServices');
+      return response.data || [];
+    } catch (error) {
+      console.error("Error fetching services:", error);
+      return [];
+    }
   },
 
   getAllGovernorates: async (): Promise<Governorate[]> => {
-    const response = await axiosInstance.get<ApiResponse<Governorate[]>>(
-      `Lookups/GetAllGovernorates`,
-    );
-    return response.data.data || [];
+    try {
+      const response = await proxyRequest('GET', 'Lookups/GetAllGovernorates');
+      return response.data || [];
+    } catch (error) {
+      console.error("Error fetching governorates:", error);
+      return [];
+    }
   },
 
   getAllCities: async (): Promise<City[]> => {
-    const response = await axiosInstance.get<ApiResponse<City[]>>(
-      `Lookups/GetAllCities`,
-    );
-    return response.data.data || [];
+    try {
+      const response = await proxyRequest('GET', 'Lookups/GetAllCities');
+      return response.data || [];
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+      return [];
+    }
   },
 
   getTechniciansByCityAndService: async (
     cityId: number,
     serviceId: number,
   ): Promise<UserTech[]> => {
-    const response = await axiosInstance.get<ApiResponse<UserTech[]>>(
-      `UserTech/GetUserTechByCItyAndSerivce/${cityId}/${serviceId}`,
-    );
-    return response.data.data || [];
+    try {
+      const response = await proxyRequest(
+        'GET',
+        `UserTech/GetUserTechByCItyAndSerivce/${cityId}/${serviceId}`
+      );
+      return response.data || [];
+    } catch (error) {
+      console.error("Error fetching technicians:", error);
+      return [];
+    }
   },
 
   createRequest: async (
@@ -100,22 +132,12 @@ export const requestService = {
   ): Promise<ApiResponse<unknown>> => {
     try {
       console.log("Creating request with payload:", payload);
-        const response = await axiosInstance.post<ApiResponse<unknown>>(
-        `RequestService/Create`,
-        payload,
-      );
-      console.log("Create request response:", response.data);
-      return response.data;
+      const response = await proxyRequest('POST', 'RequestService/Create', payload);
+      console.log("Create request response:", response);
+      return response;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error("API Error details:", {
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message,
-        });
-        throw new Error(error.response?.data?.message || "حدث خطأ أثناء إرسال الطلب");
-      }
-      throw error;
+      console.error("API Error details:", error);
+      throw new Error( "حدث خطأ أثناء إرسال الطلب");
     }
   },
-}; 
+};
