@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import axiosInstance from "@/config/axios";
 import { 
   requestService, 
   Service, 
@@ -7,99 +6,106 @@ import {
   Governorate 
 } from "@/app/(routes)/request/services";
 
+// Helper function to make proxy requests
+async function proxyRequest(method: string, url: string, data?: any) {
+  const token = localStorage.getItem("token");
+  
+  const response = await fetch('/api/proxy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      method,
+      url,
+      data,
+      token // Pass the token to the proxy
+    })
+  });
+  
+  return response.json();
+}
+
 // Customer profile
 export const getCustomerProfile = async (userId: string) => {
-  const response = await axiosInstance.get(`/UserCustomer/GetById/${userId}`);
-  return response.data;
+  return proxyRequest('GET', `/UserCustomer/GetById/${userId}`);
 };
 
 // Technician profile
 export const getTechnicianProfile = async (userId: string) => {
-  const response = await axiosInstance.get(`/UserTech/GetById/${userId}`);
-  return response.data;
+  return proxyRequest('GET', `/UserTech/GetById/${userId}`);
 };
 
 // Update customer profile
 export const updateCustomerProfile = async (userId: string, data: any) => {
-  const response = await axiosInstance.put(`/UserCustomer/Update`, data);
-  return response.data;
+  return proxyRequest('PUT', `/UserCustomer/Update`, data);
 };
 
 // Update technician profile
 export const updateTechnicianProfile = async (userId: string, data: any) => {
-  const response = await axiosInstance.put(`/UserTech/Update`, data);
-  return response.data;
+  return proxyRequest('PUT', `/UserTech/Update`, data);
 };
 
 // Get customer orders
 export const getCustomerOrders = async (userId: string) => {
-  const response = await axiosInstance.get(`/Orders/GetByCustomerId/${userId}`);
-  return response.data;
+  return proxyRequest('GET', `/Orders/GetByCustomerId/${userId}`);
 };
 
 // Get technician orders
 export const getTechnicianOrders = async (userId: string) => {
-  const response = await axiosInstance.get(`/Orders/GetByTechnicianId/${userId}`);
-  return response.data;
+  return proxyRequest('GET', `/Orders/GetByTechnicianId/${userId}`);
 };
 
 // Accept order
 export const acceptOrder = async (orderId: number) => {
-  const response = await axiosInstance.put(`/Orders/Accept/${orderId}`);
-  return response.data;
+  return proxyRequest('PUT', `/Orders/Accept/${orderId}`);
 };
 
 // Reject order
 export const rejectOrder = async (orderId: number) => {
-  const response = await axiosInstance.put(`/Orders/Reject/${orderId}`);
-  return response.data;
+  return proxyRequest('PUT', `/Orders/Reject/${orderId}`);
 };
 
 // Get orders for a technician with specific status
 export const getTechnicianOrdersByStatus = async (
   techId: string, 
   status: number, 
-  pageNumber :number, 
-  pageSize :number
+  pageNumber: number, 
+  pageSize: number
 ) => {
   // Log the request URL to verify parameters are being sent correctly
   const url = `/RequestService/GetByUserTechIdAndStatus/${techId}/${status}/${pageNumber}/${pageSize}`;
   console.log("Requesting:", url);
   
-  const response = await axiosInstance.get(url);
-  console.log("API pageSize in response:", response.data.data.pageSize);
-  return response.data;
+  const response = await proxyRequest('GET', url);
+  console.log("API pageSize in response:", response.data.pageSize);
+  return response;
 };
 
 // Get orders for a customer with specific status
 export const getCustomerOrdersByStatus = async (
   customerId: string, 
   status: number, 
-  pageNumber:number, 
-  pageSize:number
+  pageNumber: number, 
+  pageSize: number
 ) => {
-  const response = await axiosInstance.get(
+  return proxyRequest(
+    'GET',
     `/RequestService/GetByUserCustomerIdAndStatus/${customerId}/${status}/${pageNumber}/${pageSize}`
   );
-  return response.data;
 };
 
 // Delete an order
 export const deleteOrder = async (orderId: number) => {
-  const response = await axiosInstance.delete(`RequestService/Delete/${orderId}`);
-  return response.data;
+  return proxyRequest('DELETE', `RequestService/Delete/${orderId}`);
 };
 
 // approve order status
 export const updateOrderStatus = async (orderId: number) => {
-  const response = await axiosInstance.put(`RequestService/UpdateStatusActive/${orderId}`);
-  return response.data;
+  return proxyRequest('PUT', `RequestService/UpdateStatusActive/${orderId}`);
 };
 
 // reject order status
 export const rejectOrderStatus = async (orderId: number) => {
-  const response = await axiosInstance.put(`RequestService/UpdateStatusReject/${orderId}`);
-  return response.data;
+  return proxyRequest('PUT', `RequestService/UpdateStatusReject/${orderId}`);
 };
 
 // Add this service function to your services.ts file
@@ -109,13 +115,12 @@ export const completeOrder = async (completeData: {
   rate: number;
   description: string;
 }) => {
-  const response = await axiosInstance.put(`/RequestService/UpdateStatusCompleted`, completeData);
-  return response.data;
+  return proxyRequest('PUT', `/RequestService/UpdateStatusCompleted`, completeData);
 };
 
 // Add this service function to your services.ts file
 export const getReviewsForTechnician = async (userTechId: string) => {
-  const response = await axiosInstance.get(`/ReviewTech/GetReviewsTechByUserTechId/${userTechId}`);
+  const response = await proxyRequest('GET', `/ReviewTech/GetReviewsTechByUserTechId/${userTechId}`);
   return response.data;
 };
 
@@ -124,9 +129,7 @@ export const getTechnicianNewOrdersCount = async (techId: string) => {
   try {
     // Use the existing endpoint for getting orders by status
     // Status 1 = new/pending orders
-    const response = await axiosInstance.get(
-      `/RequestService/GetByUserTechIdAndStatus/${techId}/1/1/100`
-    );
+    const response = await proxyRequest('GET', `/RequestService/GetByUserTechIdAndStatus/${techId}/1/1/100`);
     
     // The count is the length of the items array or the totalCount property
     if (response.data && response.data.data) {
@@ -173,7 +176,7 @@ export type { Service, City, Governorate };
 // Get request by ID
 export const getRequestById = async (requestId: number) => {
   try {
-    const response = await axiosInstance.get(`/RequestService/GetById/${requestId}`);
+    const response = await proxyRequest('GET', `/RequestService/GetById/${requestId}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching request:", error);
@@ -250,7 +253,7 @@ export const updateRequest = async (requestData: any) => {
     
     console.log("Sending update payload:", payload);
     
-    const response = await axiosInstance.put('/RequestService/Update', payload);
+    const response = await proxyRequest('PUT', '/RequestService/Update', payload);
     return response.data;
   } catch (error: any) {
     console.error("Error updating request:", error);

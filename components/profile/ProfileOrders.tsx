@@ -429,7 +429,7 @@ export default function ProfileOrders({
                                 {/* Only show Edit option for customers and only for new or rejected orders */}
                                 {!isTechnician && (order.statusName === "جديد" || order.statusName === "مرفوض") && (
                                     <Link href={`/orders/${order.id}/edit`}>
-                                  <DropdownMenuItem >
+                                  <DropdownMenuItem onClick={(e) => {e.stopPropagation();}}>
                                     تعديل
                                   </DropdownMenuItem>
                                     </Link>
@@ -449,11 +449,16 @@ export default function ProfileOrders({
                                 {!isTechnician && (order.statusName === "جديد" || order.statusName === "مرفوض") && (
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                      <DropdownMenuItem 
+                                        onClick={(e) => {
+                                          e.stopPropagation();  // Add this to stop propagation
+                                        }}
+                                        onSelect={(e) => e.preventDefault()}
+                                      >
                                         حذف
                                       </DropdownMenuItem>
                                     </AlertDialogTrigger>
-                                    <AlertDialogContent>
+                                    <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                                       <AlertDialogHeader>
                                         <AlertDialogTitle>هل أنت متأكد من حذف هذا الطلب؟</AlertDialogTitle>
                                         <AlertDialogDescription>
@@ -461,9 +466,12 @@ export default function ProfileOrders({
                                         </AlertDialogDescription>
                                       </AlertDialogHeader>
                                       <AlertDialogFooter>
-                                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                        <AlertDialogAction 
-                                          onClick={() => handleDeleteOrder(order.id)}
+                                        <AlertDialogCancel onClick={(e) => e.stopPropagation()}>إلغاء</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={(e) => { 
+                                            e.stopPropagation();
+                                            handleDeleteOrder(order.id);
+                                          }}
                                           className="bg-destructive text-white hover:bg-destructive/90"
                                         >
                                           حذف
@@ -473,7 +481,7 @@ export default function ProfileOrders({
                                   </AlertDialog>
                                 )}
                               </DropdownMenuContent>
-                            </DropdownMenu>
+                            </DropdownMenu> 
                           </div>
                           
                           <div className="mb-4 mt-6">

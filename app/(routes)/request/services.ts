@@ -61,34 +61,42 @@ export interface ApiResponse<T> {
   data: T | null;
 }
 
+// Helper function to make proxy requests
+async function proxyRequest(method: string, url: string, data?: any) {
+  const token = localStorage.getItem("token");
+  
+  const response = await fetch('/api/proxy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      method,
+      url,
+      data,
+      token // Pass the token to the proxy
+    })
+  });
+  
+  return response.json();
+}
+
 export const requestService = {
   // Get all services
   getAllServices: async (): Promise<ApiResponse<Service[]>> => {
     try {
       console.log("Fetching services...");
-      const response = await axiosInstance.get<ApiResponse<Service[]>>(
-        `/Lookups/GetAllServices`,
-      );
+      const response = await proxyRequest('GET', '/Lookups/GetAllServices');
+      
       console.log("Services API response:", {
-        status: response.status,
-        statusText: response.statusText,
-        data: response.data,
-        success: response.data.success,
-        message: response.data.message,
-        errors: response.data.errors,
-        servicesData: response.data.data
+        data: response,
+        success: response.success,
+        message: response.message,
+        errors: response.errors,
+        servicesData: response.data
       });
 
-      return response.data;
+      return response;
     } catch (error) {
       console.error("Error fetching services:", error);
-      if (axios.isAxiosError(error)) {
-        console.error("API Error details:", {
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message,
-        });
-      }
       return {
         success: false,
         message: error instanceof Error ? error.message : "حدث خطأ أثناء تحميل الخدمات",
@@ -101,10 +109,8 @@ export const requestService = {
   // Get all governorates
   getAllGovernorates: async (): Promise<Governorate[]> => {
     try {
-      const response = await axiosInstance.get<ApiResponse<Governorate[]>>(
-        `/Lookups/GetAllGovernorates`,
-      );
-      return response.data.data || [];
+      const response = await proxyRequest('GET', '/Lookups/GetAllGovernorates');
+      return response.data || [];
     } catch (error) {
       console.error("Error fetching governorates:", error);
       return [];
@@ -114,10 +120,8 @@ export const requestService = {
   // Get all cities
   getAllCities: async (): Promise<City[]> => {
     try {
-      const response = await axiosInstance.get<ApiResponse<City[]>>(
-        `/Lookups/GetAllCities`,
-      );
-      return response.data.data || [];
+      const response = await proxyRequest('GET', '/Lookups/GetAllCities');
+      return response.data || [];
     } catch (error) {
       console.error("Error fetching cities:", error);
       return [];
@@ -131,20 +135,14 @@ export const requestService = {
   ): Promise<UserTech[]> => {
     try {
       console.log("Fetching technicians for city:", cityId, "and service:", serviceId);
-      const response = await axiosInstance.get<ApiResponse<UserTech[]>>(
-        `/UserTech/GetUserTechByCItyAndSerivce/${cityId}/${serviceId}`,
+      const response = await proxyRequest(
+        'GET',
+        `/UserTech/GetUserTechByCItyAndSerivce/${cityId}/${serviceId}`
       );
-      console.log("Technicians response:", response.data);
-      return response.data.data || [];
+      console.log("Technicians response:", response);
+      return response.data || [];
     } catch (error) {
       console.error("Error fetching technicians:", error);
-      if (axios.isAxiosError(error)) {
-        console.error("API Error details:", {
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message,
-        });
-      }
       return [];
     }
   },
@@ -154,11 +152,8 @@ export const requestService = {
     payload: CreateRequestPayload,      
   ): Promise<ApiResponse<unknown>> => {
     try {
-      const response = await axiosInstance.post<ApiResponse<unknown>>(
-        `/RequestService/Create`,
-        payload,
-      );
-      return response.data;
+      const response = await proxyRequest('POST', '/RequestService/Create', payload);
+      return response;
     } catch (error) {
       console.error("Error creating request:", error);
       throw error;
@@ -167,15 +162,13 @@ export const requestService = {
 
   async getUserData(userId: number) {
     try {
-      const response = await axiosInstance.get<ApiResponse<UserTech>>(
-        `/UserCustomer/GetById/${userId}`
-      );
+      const response = await proxyRequest('GET', `/UserCustomer/GetById/${userId}`);
 
-      if (!response.data.success) {
-        throw new Error(`Failed to fetch user data: ${response.data.message}`);
+      if (!response.success) {
+        throw new Error(`Failed to fetch user data: ${response.message}`);
       }
 
-      return response.data.data; // Return the full user data
+      return response.data; // Return the full user data
     } catch (error) {
       console.error("Error fetching user data:", error);
       throw error;
