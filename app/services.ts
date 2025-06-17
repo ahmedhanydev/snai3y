@@ -3,7 +3,7 @@
 
 // Helper function to make proxy requests
 async function proxyRequest(method: string, url: string, data?: any) {
-  const token = localStorage.getItem("token");
+  // const token = localStorage.getItem("token");
 
   const response = await fetch("/api/proxy", {
     method: "POST",
@@ -12,7 +12,7 @@ async function proxyRequest(method: string, url: string, data?: any) {
       method,
       url,
       data,
-      token, // Pass the token to the proxy
+      // token, // Pass the token to the proxy
     }),
   });
 

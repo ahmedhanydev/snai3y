@@ -22,7 +22,7 @@ const Main: React.FC = () => {
 
   const {data:reviews} = useQuery({
     queryKey: ["reviews"],
-    queryFn: getReviews
+    queryFn: () => getReviews()
   })
 
 
