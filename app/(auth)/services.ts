@@ -1,4 +1,5 @@
-import axios from "axios";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import type { UserCustomer, UserTechnician } from "@/validations/userSchema";
 
 // Helper function to make proxy requests

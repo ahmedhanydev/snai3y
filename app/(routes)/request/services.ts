@@ -1,5 +1,5 @@
-import axiosInstance from "@/config/axios";
-import axios from "axios";
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export interface Service {
   id: number;

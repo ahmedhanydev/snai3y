@@ -10,14 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   updateCustomerProfile, 
   updateTechnicianProfile,
-  getAllServices,
-  getAllCities,
-  getAllGovernorates,
   Service,
   City,
   Governorate
 } from "@/app/(routes)/profile/services";
 import Image from "next/image";
+import { requestService } from "@/app/services/request";
 
 interface ProfileSettingsProps {
   userProfile: any;
@@ -48,17 +46,17 @@ export default function ProfileSettings({ userProfile, isTechnician = false }: P
   // Fetch services, cities, and governorates
   const { data: services = [] } = useQuery<Service[]>({
     queryKey: ['services'],
-    queryFn: getAllServices,
+    queryFn: () => requestService?.getAllServices(),
   });
 
   const { data: governorates = [] } = useQuery<Governorate[]>({
     queryKey: ['governorates'],
-    queryFn: getAllGovernorates,
+    queryFn: () => requestService?.getAllGovernorates(),
   });
 
   const { data: cities = [] } = useQuery<City[]>({
     queryKey: ['cities'],
-    queryFn: getAllCities,
+    queryFn: () => requestService?.getAllCities(),
   });
 
   // Filter cities by selected governorate
