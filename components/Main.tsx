@@ -47,7 +47,7 @@ const Main: React.FC = () => {
       <HowItWorks />
 
       {/* Testimonials Section */}
-      <Testimonials reviews={reviews?.data} />
+      <Testimonials reviews={reviews} />
     </div>
   );
 };

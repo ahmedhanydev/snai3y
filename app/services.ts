@@ -22,6 +22,7 @@ async function proxyRequest(method: string, url: string, data?: any) {
 export const getReviews = async () => {
   try {
     const response = await proxyRequest("GET", "/ReviewTech/GetAllReviewTechs");
+    console.log("Reviews fetched successfully:", response?.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching reviews:", error);
