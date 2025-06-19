@@ -1,8 +1,8 @@
 "use client";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -15,9 +15,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 export const LoginForm = () => {
   const [activeTab, setActiveTab] = useState<string>("customer");
+  const [callbackUrl, setCallbackUrl] = useState<string>("/profile");
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/profile";
+
+  // Extract callback URL from window.location on component mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const callback = urlParams.get("callbackUrl");
+      if (callback) {
+        setCallbackUrl(callback);
+      }
+    }
+  }, []);
 
   console.log("LoginForm rendered with activeTab:", activeTab);
   console.log("Callback URL:", callbackUrl);
