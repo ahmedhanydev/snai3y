@@ -39,6 +39,25 @@ export default function RequestService() {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState<number>(1);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthChecked, setIsAuthChecked] = useState<boolean>(false);
+
+  // Check authentication on component mount
+  useEffect(() => {
+    const checkAuth = () => {
+      if (typeof window !== "undefined") {
+        const accessToken = localStorage.getItem("access_token");
+        if (!accessToken) {
+          router.push('/login?callbackUrl=/request');
+          return false;
+        }
+        return true;
+      }
+      return false;
+    };
+
+    const isAuthenticated = checkAuth();
+    setIsAuthChecked(isAuthenticated);
+  }, [router]);
 
   const {
     register,
@@ -320,12 +339,13 @@ export default function RequestService() {
     }
   }, [servicesResponse, isLoadingServices]);
 
-  if (isLoading && activeStep === 1) {
+  // If authentication check is not complete or user is not authenticated, show loading
+  if (!isAuthChecked || isLoading && activeStep === 1) {
     return (
       <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="text-gray-600">جاري تحميل البيانات...</p>
+          <p className="text-gray-600">جاري التحقق من البيانات...</p>
         </div>
       </div>
     );

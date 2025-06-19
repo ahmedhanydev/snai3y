@@ -1,8 +1,8 @@
 "use client";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -16,7 +16,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 export const LoginForm = () => {
   const [activeTab, setActiveTab] = useState<string>("customer");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/profile";
+
   console.log("LoginForm rendered with activeTab:", activeTab);
+  console.log("Callback URL:", callbackUrl);
 
   // Customer login form
   const {
@@ -53,13 +57,14 @@ export const LoginForm = () => {
       if (res.success && res.data) {
         // Store token and user information
         localStorage.setItem("token", res.data.token);
+        localStorage.setItem("access_token", res.data.token); // Also store as access_token for consistency
         localStorage.setItem("userType", "customer");
         localStorage.setItem("userId", res.data.id.toString());
         localStorage.setItem("userName", res.data.userName);
         localStorage.setItem("expiryDate", res.data.expiryDate);
 
         toast.success("تم تسجيل الدخول بنجاح");
-        router.push("/profile"); // Redirect to customer dashboard
+        router.push(callbackUrl); // Redirect to callback URL or profile
       } else {
         toast.error("حدث خطأ أثناء تسجيل الدخول");
       }
@@ -79,13 +84,14 @@ export const LoginForm = () => {
       if (res.success && res.data) {
         // Store token and user information
         localStorage.setItem("token", res.data.token);
+        localStorage.setItem("access_token", res.data.token); // Also store as access_token for consistency
         localStorage.setItem("userType", "technician");
         localStorage.setItem("userId", res.data.id.toString());
         localStorage.setItem("userName", res.data.userName);
         localStorage.setItem("expiryDate", res.data.expiryDate);
 
         toast.success("تم تسجيل الدخول بنجاح");
-        router.push("/profile"); // Redirect to technician dashboard
+        router.push(callbackUrl); // Redirect to callback URL or profile
       } else {
         toast.error("حدث خطأ أثناء تسجيل الدخول");
       }
@@ -106,6 +112,11 @@ export const LoginForm = () => {
 
   return (
     <div className="flex justify-center w-full">
+      {callbackUrl !== "/profile" && (
+        <div className="absolute top-24 w-full md:w-1/2 text-center bg-blue-50 p-3 rounded-lg text-blue-700">
+          يرجى تسجيل الدخول للاستمرار في العملية
+        </div>
+      )}
       <Tabs
         dir="rtl"
         defaultValue="customer"

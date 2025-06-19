@@ -80,6 +80,7 @@ export const Navbar = () => {
     localStorage.removeItem("userName");
     localStorage.removeItem("expiryDate");
     localStorage.removeItem("imageBase64");
+    localStorage.removeItem("access_token");
 
     // Trigger a storage event to update other components
     window.dispatchEvent(new Event("storage"));
