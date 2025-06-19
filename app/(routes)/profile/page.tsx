@@ -56,7 +56,7 @@ export default function Profile() {
         ? await getTechnicianProfile(userId)
         : await getCustomerProfile(userId);
 
-      console.log("API Response:", response);
+      // console.log("API Response:", response);
       return response;
     },
     enabled: !!userId && !!userType,
@@ -74,6 +74,8 @@ export default function Profile() {
     enabled: !!userId && userType === 'technician',
     refetchInterval: 30000 // Refresh every 30 seconds to get updated count
   });
+
+
 
   useEffect(() => {
     if (newOrdersData && newOrdersData.data) {

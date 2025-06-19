@@ -227,7 +227,8 @@ useEffect(() => {
     );
   }
 
-  const request = requestData?.data;
+  const request = requestData;
+
   if (!request) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8" dir="rtl">

@@ -66,6 +66,9 @@ export default function ProfileReviews({ userId, userProfile }: ProfileReviewsPr
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
+
+  console.log("Reviews Data:", reviewsData);
+
   return (
     <Card className="p-6">
       <h3 className="text-lg font-semibold mb-4 text-right">
@@ -78,8 +81,8 @@ export default function ProfileReviews({ userId, userProfile }: ProfileReviewsPr
         </div>
       ) : (
         <div className="space-y-6">
-          {reviewsData?.data?.length > 0 ? (
-            reviewsData.data.map((review: Review) => (
+          {reviewsData?.length > 0 ? (
+            reviewsData.map((review: Review) => (
               <Card key={review.id} className="p-5 border-2 border-gray-100">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center gap-2">

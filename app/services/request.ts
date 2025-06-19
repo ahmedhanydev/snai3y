@@ -83,7 +83,7 @@ async function proxyRequest(method: string, url: string, data?: any) {
 export const requestService = {
   getAllServices: async (): Promise<Service[]> => {
     try {
-      const response = await proxyRequest('GET', 'Lookups/GetAllServices');
+      const response = await proxyRequest('GET', '/Lookups/GetAllServices');
       return response.data || [];
     } catch (error) {
       console.error("Error fetching services:", error);
@@ -93,7 +93,7 @@ export const requestService = {
 
   getAllGovernorates: async (): Promise<Governorate[]> => {
     try {
-      const response = await proxyRequest('GET', 'Lookups/GetAllGovernorates');
+      const response = await proxyRequest('GET', '/Lookups/GetAllGovernorates');
       return response.data || [];
     } catch (error) {
       console.error("Error fetching governorates:", error);
@@ -103,7 +103,7 @@ export const requestService = {
 
   getAllCities: async (): Promise<City[]> => {
     try {
-      const response = await proxyRequest('GET', 'Lookups/GetAllCities');
+      const response = await proxyRequest('GET', '/Lookups/GetAllCities');
       return response.data || [];
     } catch (error) {
       console.error("Error fetching cities:", error);

@@ -95,17 +95,17 @@ export const getCustomerOrdersByStatus = async (
 
 // Delete an order
 export const deleteOrder = async (orderId: number) => {
-  return proxyRequest('DELETE', `RequestService/Delete/${orderId}`);
+  return proxyRequest('DELETE', `/RequestService/Delete/${orderId}`);
 };
 
 // approve order status
 export const updateOrderStatus = async (orderId: number) => {
-  return proxyRequest('PUT', `RequestService/UpdateStatusActive/${orderId}`);
+  return proxyRequest('PUT', `/RequestService/UpdateStatusActive/${orderId}`);
 };
 
 // reject order status
 export const rejectOrderStatus = async (orderId: number) => {
-  return proxyRequest('PUT', `RequestService/UpdateStatusReject/${orderId}`);
+  return proxyRequest('PUT', `/RequestService/UpdateStatusReject/${orderId}`);
 };
 
 // Add this service function to your services.ts file
@@ -130,13 +130,13 @@ export const getTechnicianNewOrdersCount = async (techId: string) => {
     // Use the existing endpoint for getting orders by status
     // Status 1 = new/pending orders
     const response = await proxyRequest('GET', `/RequestService/GetByUserTechIdAndStatus/${techId}/1/1/100`);
-    
+    console.log("New orders count response:", response?.data?.totalCount);
     // The count is the length of the items array or the totalCount property
-    if (response.data && response.data.data) {
+    if (response?.data ) {
       // If API returns totalCount directly
-      if (response.data.data.totalCount !== undefined) {
+      if (response?.data?.totalCount !== undefined) {
         return {
-          data: response.data.data.totalCount,
+          data: response?.data?.totalCount,
           success: true
         };
       }

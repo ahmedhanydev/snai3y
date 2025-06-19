@@ -739,17 +739,15 @@ export default function RequestService() {
                     >
                       <div className="flex items-start space-x-4">
                         {/* Technician image */}
-                        {technician.imageBase64 && (
+                        {technician?.imageBase64 && (
                           <div className="w-16 h-16 rounded-full overflow-hidden">
                             <Image
-                              src={`data:image/jpeg;base64,${technician.imageBase64}`}
-                              alt={technician.fullName}
+                              src={ technician?.imageBase64 !== "" && technician?.imageBase64 !== undefined && technician?.imageBase64 !== null ? `data:image/jpeg;base64,${technician?.imageBase64}` : "/images/tech.png"}
+                              alt={technician?.fullName}
                               className="w-full h-full object-cover"
                               width={64}
                               height={64}
-                              onError={(e) => {
-                                console.error("Error loading technician image:", e);
-                              }}
+                             
                             />
                           </div>
                         )}

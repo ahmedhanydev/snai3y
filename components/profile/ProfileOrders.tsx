@@ -362,6 +362,8 @@ export default function ProfileOrders({
     return pages;
   };
 
+
+
   return (
     <>
       <Card className="p-6">
@@ -547,7 +549,9 @@ export default function ProfileOrders({
                               <Button
                                 variant="default"
                                 className="w-1/2 py-6 text-base font-medium hover:bg-primary/90 transition-colors"
-                                onClick={() => handleAcceptOrder(order.id)}
+                                onClick={(e) =>{ handleAcceptOrder(order.id)
+                                  e.stopPropagation();  // Prevent card click
+                                }}
                                 disabled={updateOrderStatusMutation.isPending}
                               >
                                 {updateOrderStatusMutation.isPending ? "جاري القبول..." : "قبول الطلب"}
@@ -555,7 +559,9 @@ export default function ProfileOrders({
                               <Button
                                 variant="destructive"
                                 className="w-1/2 py-6 text-base font-medium hover:bg-destructive/90 transition-colors"
-                                onClick={() => rejectOrderStatusMutation.mutate({ orderId: order.id })}
+                                onClick={(e) =>{ rejectOrderStatusMutation.mutate({ orderId: order.id })
+                                  e.stopPropagation();  // Prevent card click
+                                }}
                                 disabled={rejectOrderStatusMutation.isPending}
                               >
                                 {rejectOrderStatusMutation.isPending ? "جاري الرفض..." : "رفض الطلب"}
