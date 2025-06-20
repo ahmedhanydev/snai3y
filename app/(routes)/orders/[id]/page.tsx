@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { getRequestById, updateOrderStatus, completeOrder, deleteOrder, rejectOrderStatus } from "@/app/(routes)/profile/services";
 import Image from "next/image";
+import CompleteOrderDialog from "@/components/profile/CompleteOrderDialog";
 
 
 export default function RequestDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -58,8 +59,12 @@ useEffect(() => {
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
-  const [rating, setRating] = useState(5);
-  const [reviewComment, setReviewComment] = useState("");
+
+    const [completeFormData, setCompleteFormData] = useState({
+    totalPayment: 0,
+    rate: 0,
+    description: ""
+  });
   
   // Fetch request data
   const { data: requestData, isLoading, error } = useQuery({
@@ -97,27 +102,52 @@ useEffect(() => {
     }
   });
 
-  // Complete order mutation
+ // Complete order mutation
   const completeOrderMutation = useMutation({
-    mutationFn: () => completeOrder({
-      id: requestId,
-      rate: rating,
-      description: reviewComment,
-      // Add totalPayment if required by the API, e.g.:
-      // totalPayment: request?.totalPayment ?? 0
-    totalPayment: request?.totalPayment ?? 0
-    }),
+    mutationFn: (completeData: {
+      id: number;
+      totalPayment: number;
+      rate: number;
+      description: string;
+    }) => completeOrder(completeData),
     onSuccess: () => {
       toast.success("تم إكمال الطلب بنجاح");
       setIsCompleteDialogOpen(false);
-      queryClient.invalidateQueries({ queryKey: ['request', requestId] });
+      // Reset form data
+      setCompleteFormData({
+        totalPayment: 0,
+        rate: 0,
+        description: ""
+      });
+      // Invalidate and refetch orders query
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     },
     onError: (error) => {
+      console.error("Error completing order:", error);
       toast.error("حدث خطأ أثناء إكمال الطلب");
-      console.error(error);
     }
   });
+
+    // Handle form input changes
+  const handleCompleteFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setCompleteFormData(prev => ({
+      ...prev,
+      [name]: name === 'totalPayment' || name === 'rate' ? Number(value) : value
+    }));
+  };
+
+
+    // Handle complete order
+  const handleCompleteOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!requestId) return;
+
+    completeOrderMutation.mutate({
+      id: requestId,
+      ...completeFormData
+    });
+  };
 
   // Delete order mutation
   const deleteOrderMutation = useMutation({
@@ -143,10 +173,10 @@ useEffect(() => {
     rejectOrderMutation.mutate();
   };
 
-  // Handle complete order
-  const handleCompleteOrder = () => {
-    completeOrderMutation.mutate();
-  };
+  // // Handle complete order
+  // const handleCompleteOrder = () => {
+  //   completeOrderMutation.mutate();
+  // };
 
   // Handle delete order
   const handleDeleteOrder = () => {
@@ -735,7 +765,7 @@ useEffect(() => {
       </Dialog>
 
       {/* Complete Order Dialog */}
-      <Dialog open={isCompleteDialogOpen} onOpenChange={setIsCompleteDialogOpen}>
+      {/* <Dialog open={isCompleteDialogOpen} onOpenChange={setIsCompleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>إكمال الطلب</DialogTitle>
@@ -784,7 +814,15 @@ useEffect(() => {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
+        <CompleteOrderDialog
+              isOpen={isCompleteDialogOpen}
+              onOpenChange={setIsCompleteDialogOpen}
+              formData={completeFormData}
+              onChange={handleCompleteFormChange}
+              onSubmit={handleCompleteOrder}
+              isPending={completeOrderMutation.isPending}
+            />
 
       {/* Contact Dialog */}
       <Dialog open={isContactDialogOpen} onOpenChange={setIsContactDialogOpen}>

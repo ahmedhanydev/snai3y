@@ -439,12 +439,21 @@ export default function ProfileOrders({
                                 
                                 {/* Add Complete Order button for customers - only for in-progress orders */}
                                 {!isTechnician && order.statusName === "مفعل" && (
-                                  <DropdownMenuItem onSelect={(e) => {
-                                    e.preventDefault();
-                                    openCompleteDialog(order.id);
-                                  }}>
-                                    إكمال
-                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+  onSelect={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openCompleteDialog(order.id);
+  }}
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openCompleteDialog(order.id);
+
+  }}
+>
+  إكمال
+</DropdownMenuItem>
                                 )}
                                 
                                 {/* Only show Delete option for customers and only for new or rejected orders */}

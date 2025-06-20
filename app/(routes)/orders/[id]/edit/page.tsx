@@ -53,7 +53,7 @@ export default function EditRequestPage({ params }: { params: Promise<{ id: stri
   }, []);
   // Add logging for services data
   useEffect(() => {
-    console.log("Services data updated:", services);
+    // console.log("Services data updated:", services);
     if (services && !Array.isArray(services)) {
       console.error("Services is not an array:", services);
     }
@@ -66,23 +66,25 @@ export default function EditRequestPage({ params }: { params: Promise<{ id: stri
     enabled: !!requestId,
   });
 
+
+  console.log("Request Data:", requestData);
   useEffect(() => {
-    if (requestData?.data) {
+    if (requestData) {
       setFormData({
-        id: requestData.data.id,
-        userCustomerId: requestData.data.userCustomerId,
-        userTechId: requestData.data.userTechId,
-        description: requestData.data.description || "",
-        location: requestData.data.location || "",
-        requestDateTime: requestData.data.requestDateTime,
-        status: requestData.data.status,
-        serviceId: requestData.data.serviceId,
-        attachmentBase64: requestData.data.attachmentBase64 || "",
-        serviceName: requestData.data.serviceName || ""
+        id: requestData.id,
+        userCustomerId: requestData.userCustomerId,
+        userTechId: requestData.userTechId,
+        description: requestData.description || "",
+        location: requestData.location || "",
+        requestDateTime: requestData.requestDateTime,
+        status: requestData.status,
+        serviceId: requestData.serviceId,
+        attachmentBase64: requestData.attachmentBase64 || "",
+        serviceName: requestData.serviceName || ""
       });
 
-      if (requestData.data.attachmentBase64) {
-        setSelectedImage(requestData.data.attachmentBase64);
+      if (requestData.attachmentBase64) {
+        setSelectedImage(requestData.attachmentBase64);
       }
     }
   }, [requestData]);
