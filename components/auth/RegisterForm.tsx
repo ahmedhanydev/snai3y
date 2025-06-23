@@ -175,8 +175,12 @@ export const RegisterForm = () => {
     mutationFn: registerTechnician,
     onSuccess: (res) => {
       console.log("success", res);
-      toast.success("تم انشاء الحساب بنجاح");
-      router.push("/login");
+      if (res.success === true) {
+        toast.success("تم انشاء الحساب بنجاح");
+        router.push("/login");
+      } else {
+        toast.error(res.message || "حدث خطأ أثناء إنشاء الحساب");
+      }
     },
     onError: (err) => {
       console.log(err);
